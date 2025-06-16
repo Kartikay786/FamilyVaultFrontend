@@ -46,8 +46,8 @@ const Dashboard = () => {
   const quickActions = [
     { label: 'Upload Memory', icon: Upload, path: '/family/uploadmemory', color: 'from-purple-600 to-pink-600' },
     { label: 'Create Vault', icon: Plus, path: '/family/createvault', color: 'from-blue-600 to-cyan-600' },
-    { label: 'Family Tree', icon: Users, path: '/family/familytree', color: 'from-orange-600 to-red-600' },
-    { label: 'Add Member', icon: Plus, path: '/family/addMember', color: 'from-green-600 to-emerald-600' },
+    { label: 'Add Member', icon: Plus, path: '/family/addMember', color: 'from-orange-600 to-red-600' },
+    { label: 'Recent Memories', icon: Heart, path: '/family/recentMemory', color: 'from-green-600 to-emerald-600' },
   ];
 
   return (
@@ -84,7 +84,7 @@ const Dashboard = () => {
               <button
                 key={index}
                 onClick={() => navigate(action.path)}
-                className={`w-full flex items-center space-x-4 p-4 bg-gradient-to-r ${action.color} rounded-xl text-white hover:shadow-lg transition-all duration-300 transform hover:scale-105`}
+                className={`w-full cursor-pointer flex items-center space-x-4 p-4 bg-gradient-to-r ${action.color} rounded-xl text-white hover:shadow-lg transition-all duration-300 transform hover:scale-105`}
               >
                 <action.icon className="w-6 h-6" />
                 <span className="font-semibold">{action.label}</span>

@@ -45,10 +45,10 @@ const App = () => {
             <Route path='vaultoverview' element={<VaultOverview/>} /> 
             <Route path='recentMemory' element={<RecentMemories/>} /> 
             <Route path='createvault' element={<CreateVault/>} />
-            <Route path='editvault' element={<EditVaultSettings/>} />
-            <Route path='vaultdetail' element={<VaultDetail/>} />
-            <Route path='editmemory' element={<EditMemory/>} />
-            <Route path='memorydetail' element={<MemoryDetails/>} />
+            <Route path='editvault/:vaultId' element={<EditVaultSettings/>} />
+            <Route path='vaultdetail/:vaultId' element={<VaultDetail/>} />
+            <Route path='editmemory/:memoryId' element={<EditMemory/>} />
+            <Route path='memorydetail/:memoryId' element={<MemoryDetails/>} />
             <Route path='memorysearch' element={<MemorySearch/>} />
             <Route path='memorytimeline' element={<MemoryTimeline/>} />
             <Route path='uploadmemory' element={<Uploadmemory/>} />

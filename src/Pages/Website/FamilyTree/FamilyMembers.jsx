@@ -4,47 +4,53 @@ import {
     ArrowLeft,
     Edit,
     MessageCircle,
-    Phone,
     Mail,
-    MapPin,
     Calendar,
     Heart,
     Camera,
     Video,
     Mic,
     Users,
-    Gift,
-    Star,
-    MoreHorizontal,
-    UserPlus,
-    UserMinus,
     Shield,
     Crown,
     Baby
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { familProfileFunction } from '../../../Redux/Reducers/FamilyProfile.slice.jsx';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const FamilyMember = ({ member, onViewChange }) => {
+    const navigate = useNavigate();
     const containerRef = useRef(null);
     const dispatch = useDispatch();
     const { family, loading } = useSelector((state) => state.familyProfile);
     const [activeTab, setActiveTab] = useState('overview');
+    const [familyData,setFamilyData] = useState({});
+
+    // useEffect(() => {
+    //     console.log("✅ useEffect running");
+    //     const familyId = localStorage.getItem('familyId');
+    //     console.log("familyId:", familyId); // Should log a 24-character string
+    //     if (!familyId) {
+    //         console.error("❌ No familyId in localStorage");
+    //         return;
+    //     }
+    //     console.log("⬇ Dispatching thunk...");
+    //     dispatch(familProfileFunction(familyId)); // Trim whitespace
+    // }, [dispatch]);
 
     useEffect(() => {
-        console.log("✅ useEffect running");
         const familyId = localStorage.getItem('familyId');
-        console.log("familyId:", familyId); // Should log a 24-character string
-        if (!familyId) {
-            console.error("❌ No familyId in localStorage");
-            return;
+        const fetchProfile = async () => {
+            const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/family/familyProfile/${familyId}`)
+            // console.log(result);
+            setFamilyData(result?.data?.family)
         }
-        console.log("⬇ Dispatching thunk...");
-        dispatch(familProfileFunction(familyId)); // Trim whitespace
-    }, [dispatch]);
+        fetchProfile()
+    }, [])
 
-    console.log(family, familProfileFunction);
-
+    console.log(familyData.member)
     const memberData = member || {
         id: 1,
         name: "David Johnson",
@@ -118,8 +124,6 @@ const FamilyMember = ({ member, onViewChange }) => {
         { id: 'memories', label: 'Memories', icon: Camera },
     ];
 
-
-
     useEffect(() => {
         const ctx = gsap.context(() => {
             gsap.fromTo(containerRef.current,
@@ -161,30 +165,30 @@ const FamilyMember = ({ member, onViewChange }) => {
                             <Mail className="w-5 h-5 text-purple-300" />
                             <div>
                                 <p className="text-white text-sm font-medium">Email</p>
-                                <p className="text-purple-200 text-sm">{memberData.email}</p>
+                                <p className="text-purple-200 text-sm">{familyData.email}</p>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        {/* <div className="flex items-center space-x-3">
                             <Phone className="w-5 h-5 text-purple-300" />
                             <div>
                                 <p className="text-white text-sm font-medium">Phone</p>
-                                <p className="text-purple-200 text-sm">{memberData.phone}</p>
+                                <p className="text-purple-200 text-sm">{familyData.number}</p>
                             </div>
-                        </div>
+                        </div> */}
                         <div className="flex items-center space-x-3">
                             <Calendar className="w-5 h-5 text-purple-300" />
                             <div>
-                                <p className="text-white text-sm font-medium">Birthday</p>
-                                <p className="text-purple-200 text-sm">{memberData.birth}</p>
+                                <p className="text-white text-sm font-medium">Family Account Since </p>
+                                <p className="text-purple-200 text-sm">{new Date(familyData.createdAt).toLocaleDateString()}</p>
                             </div>
                         </div>
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-center space-x-3">
-                            <MapPin className="w-5 h-5 text-purple-300" />
+                            <Users className="w-5 h-5 text-purple-300" />
                             <div>
-                                <p className="text-white text-sm font-medium">Location</p>
-                                <p className="text-purple-200 text-sm">{memberData.location}</p>
+                                <p className="text-white text-sm font-medium">Members</p>
+                                <p className="text-purple-200 text-sm">{familyData.member?.length}</p>
                             </div>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -194,13 +198,13 @@ const FamilyMember = ({ member, onViewChange }) => {
                                 <p className="text-purple-200 text-sm">{memberData.relationship}</p>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        {/* <div className="flex items-center space-x-3">
                             <Users className="w-5 h-5 text-purple-300" />
                             <div>
                                 <p className="text-white text-sm font-medium">Member Since</p>
                                 <p className="text-purple-200 text-sm">{memberData.joinedDate}</p>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
@@ -208,7 +212,7 @@ const FamilyMember = ({ member, onViewChange }) => {
             {/* Bio */}
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
                 <h3 className="text-lg font-semibold text-white mb-4">About</h3>
-                <p className="text-purple-200 leading-relaxed">{memberData.bio}</p>
+                <p className="text-purple-200 leading-relaxed">{familyData.description}</p>
             </div>
 
             {/* Memory Statistics */}
@@ -220,7 +224,7 @@ const FamilyMember = ({ member, onViewChange }) => {
                         <div className="text-purple-200 text-sm">Memories</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-red-400 mb-1">{memberData.memories.liked}</div>
+                        <div className="text-2xl font-bold text-red-400 mb-1">{familyData.member?.length}</div>
                         <div className="text-purple-200 text-sm">Members</div>
                     </div>
                     <div className="text-center">
@@ -233,9 +237,62 @@ const FamilyMember = ({ member, onViewChange }) => {
         </div>
     );
 
+     const renderConnections = () => (
+        <div className="space-y-6">
+            <div>
+                <h3 className="text-lg font-semibold text-white mb-4">Family Connections</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {familyData.member.map((member) => (
+                        <div
+                            key={member._id}
+                            onClick={() => onViewChange('member-details', { member: member })}
+                            className="flex items-center space-x-4 bg-white/5 rounded-lg p-4 border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer hover:transform hover:scale-105"
+                        >
+                            <div className="w-12 h-12 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                                {
+                                    member.member?.profileImage ? (
+                                        <img className='h-auto w-12 bg-cover bg-center scale-150' src={`${import.meta.env.VITE_BASE_URL}/images/${member.member.profileImage}`}/>
+                                    ): ''
+                                }
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="text-white font-medium">{member.member.memberName}</h4>
+                                <p className="text-purple-300 text-sm capitalize">{member.member.relation}</p>
+                            </div>
+                            <div className={`w-3 h-3 rounded-full ${'active' === 'active' ? 'bg-green-400' : 'bg-gray-400'
+                                }`}></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Family Tree Preview */}
+            {/* <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white">Family Tree Position</h3>
+                    <button
+                        onClick={() => onViewChange('family-tree')}
+                        className="text-purple-300 hover:text-white text-sm transition-colors duration-300"
+                    >
+                        View Full Tree →
+                    </button>
+                </div>
+                <div className="text-center">
+                    <div className="inline-block bg-white/10 rounded-lg p-4 border border-white/20">
+                        <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-2">
+                            {memberData.avatar}
+                        </div>
+                        <h4 className="text-white font-medium">{memberData.name}</h4>
+                        <p className="text-purple-300 text-sm">{memberData.role}</p>
+                    </div>
+                </div>
+            </div> */}
+        </div>
+    );
+
     const renderMemories = () => (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white">Favorite Memories</h3>
                 <button className="text-purple-300 hover:text-white text-sm transition-colors duration-300">
                     View All →
@@ -308,54 +365,7 @@ const FamilyMember = ({ member, onViewChange }) => {
         </div>
     );
 
-    const renderConnections = () => (
-        <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold text-white mb-4">Family Connections</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {memberData.connections.map((connection, index) => (
-                        <div
-                            key={index}
-                            onClick={() => onViewChange('member-details', { member: connection })}
-                            className="flex items-center space-x-4 bg-white/5 rounded-lg p-4 border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer hover:transform hover:scale-105"
-                        >
-                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
-                                {connection.avatar}
-                            </div>
-                            <div className="flex-1">
-                                <h4 className="text-white font-medium">{connection.name}</h4>
-                                <p className="text-purple-300 text-sm">{connection.relation}</p>
-                            </div>
-                            <div className={`w-3 h-3 rounded-full ${connection.status === 'active' ? 'bg-green-400' : 'bg-gray-400'
-                                }`}></div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Family Tree Preview */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Family Tree Position</h3>
-                    <button
-                        onClick={() => onViewChange('family-tree')}
-                        className="text-purple-300 hover:text-white text-sm transition-colors duration-300"
-                    >
-                        View Full Tree →
-                    </button>
-                </div>
-                <div className="text-center">
-                    <div className="inline-block bg-white/10 rounded-lg p-4 border border-white/20">
-                        <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-2">
-                            {memberData.avatar}
-                        </div>
-                        <h4 className="text-white font-medium">{memberData.name}</h4>
-                        <p className="text-purple-300 text-sm">{memberData.role}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+   
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -363,8 +373,6 @@ const FamilyMember = ({ member, onViewChange }) => {
                 return renderOverview();
             case 'memories':
                 return renderMemories();
-            case 'activity':
-                return renderActivity();
             case 'connections':
                 return renderConnections();
             default:
@@ -377,23 +385,24 @@ const FamilyMember = ({ member, onViewChange }) => {
             {/* Header */}
             <div className="flex items-center space-x-4 mb-8">
                 <button
-                    onClick={() => onViewChange('family-tree')}
-                    className="p-2 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
+                    onClick={() => navigate('/family/dashboard')}
+                    className="p-2 text-purple-300 cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
                 >
                     <ArrowLeft className="w-6 h-6" />
                 </button>
                 <div className="flex-1">
                     <div className="flex items-center space-x-4">
-                        <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                            {memberData.avatar}
+                        <div className="w-20 h-20 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                            {
+                                familyData.profileImage ? (
+                                    <img className='h-auto w-20 bg-center bg-cover' src={`${import.meta.env.VITE_BASE_URL}/images/${familyData.profileImage}`}/>
+                                ) : ''
+                            }
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white mb-1">{memberData.name}</h1>
+                            <h1 className="text-3xl font-bold text-white mb-1">{familyData.familyName}</h1>
                             <div className="flex items-center space-x-3 text-purple-200">
-                                <span className="flex items-center space-x-1">
-                                    {getStatusIcon(memberData.role)}
-                                    <span>{memberData.role}</span>
-                                </span>
+                              
                                 <span className={`w-2 h-2 rounded-full ${memberData.status === 'active' ? 'bg-green-400' : 'bg-gray-400'
                                     }`}></span>
                                 <span>Last active {memberData.lastActive}</span>
@@ -413,9 +422,9 @@ const FamilyMember = ({ member, onViewChange }) => {
                         <Edit className="w-4 h-4" />
                         <span>Edit Profile</span>
                     </button>
-                    <button className="p-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
+                    {/* <button className="p-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
                         <MoreHorizontal className="w-5 h-5" />
-                    </button>
+                    </button> */}
                 </div>
             </div>
 

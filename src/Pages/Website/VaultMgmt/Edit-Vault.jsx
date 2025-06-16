@@ -1,33 +1,44 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
-import { 
-  ArrowLeft, 
-  Save, 
-  Trash2, 
-  Upload, 
-  Palette, 
-  Users, 
+import {
+  ArrowLeft,
+  Save,
+  Trash2,
+  Upload,
+  Palette,
+  Users,
   Shield,
   Bell,
   Eye,
   EyeOff
 } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 
 
-const EditVaultSettings = ({ vault, onViewChange }) => {
+const EditVaultSettings = ({ onViewChange }) => {
   const containerRef = useRef(null);
+  const { vaultId } = useParams();
   const [activeTab, setActiveTab] = useState('general');
-  const [vaultData, setVaultData] = useState({
-    name: vault || 'Johnson Family Memories',
-    description: 'Our main family vault with memories from all generations',
-    coverImage: null,
-    theme: 'from-blue-500 to-purple-600',
-    privacy: 'private',
-    allowComments: true,
-    allowDownloads: true,
-    notifications: true,
-    autoBackup: true
-  });
+  const naivgate = useNavigate();
+  const [vaultData, setVaultData] = useState([]);
+
+  useEffect(() => {
+
+    const fetchVault = async () => {
+      try {
+        const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/vault/vaultbyId/${vaultId}`);
+        setVaultData(result?.data?.vault);
+      }
+      catch (err) {
+        console.log(err);
+      }
+    }
+
+    fetchVault();
+  },[])
+
+  console.log(vaultData)
 
   const themes = [
     { name: 'Purple Pink', value: 'from-purple-500 to-pink-500' },
@@ -51,7 +62,6 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'members', label: 'Members', icon: Users },
     { id: 'privacy', label: 'Privacy', icon: Eye },
-    { id: 'notifications', label: 'Notifications', icon: Bell }
   ];
 
   useEffect(() => {
@@ -90,7 +100,7 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
               <label className="block text-white text-sm font-medium mb-2">Vault Name</label>
               <input
                 type="text"
-                value={vaultData.name}
+                value={vaultData.vaultName}
                 onChange={(e) => setVaultData(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
@@ -113,70 +123,11 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
                 onChange={(e) => setVaultData(prev => ({ ...prev, privacy: e.target.value }))}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
-                <option value="private">Private - Invite only</option>
-                <option value="family">Family - Family members can join</option>
-                <option value="public">Public - Anyone can request to join</option>
+                <option value="Private">Private - Invite only</option>
+                 <option value="Public">Public - Anyone can request to join</option>
               </select>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-medium">Allow Comments</h3>
-                  <p className="text-purple-300 text-sm">Let members comment on memories</p>
-                </div>
-                <button
-                  onClick={() => setVaultData(prev => ({ ...prev, allowComments: !prev.allowComments }))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    vaultData.allowComments ? 'bg-purple-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      vaultData.allowComments ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-medium">Allow Downloads</h3>
-                  <p className="text-purple-300 text-sm">Let members download memories</p>
-                </div>
-                <button
-                  onClick={() => setVaultData(prev => ({ ...prev, allowDownloads: !prev.allowDownloads }))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    vaultData.allowDownloads ? 'bg-purple-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      vaultData.allowDownloads ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-medium">Auto Backup</h3>
-                  <p className="text-purple-300 text-sm">Automatically backup memories to cloud</p>
-                </div>
-                <button
-                  onClick={() => setVaultData(prev => ({ ...prev, autoBackup: !prev.autoBackup }))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    vaultData.autoBackup ? 'bg-purple-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      vaultData.autoBackup ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
           </div>
         );
 
@@ -209,7 +160,7 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
                 </label>
                 {vaultData.coverImage && (
                   <p className="text-green-300 text-sm mt-2">
-                    ✓ {vaultData.coverImage.name}
+                    ✓ {vaultData.vaultName}
                   </p>
                 )}
               </div>
@@ -223,11 +174,10 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
                     key={theme.value}
                     type="button"
                     onClick={() => setVaultData(prev => ({ ...prev, theme: theme.value }))}
-                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                      vaultData.theme === theme.value
+                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${vaultData.theme === theme.value
                         ? 'border-white bg-white/10'
                         : 'border-white/20 hover:border-white/40'
-                    }`}
+                      }`}
                   >
                     <div className={`w-full h-8 bg-gradient-to-r ${theme.value} rounded mb-2`}></div>
                     <span className="text-white text-sm">{theme.name}</span>
@@ -240,12 +190,14 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
               <h3 className="text-white text-lg font-semibold mb-4">Preview</h3>
               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                 <div className={`w-full h-24 bg-gradient-to-r ${vaultData.theme} rounded-lg mb-3`}></div>
-                <h4 className="text-white font-semibold">{vaultData.name}</h4>
+                <h4 className="text-white font-semibold">{vaultData.vaultName}</h4>
                 <p className="text-purple-200 text-sm">{vaultData.description}</p>
               </div>
             </div>
           </div>
         );
+
+
 
       case 'members':
         return (
@@ -336,20 +288,8 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
                       </div>
                       <input type="checkbox" defaultChecked className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white text-sm">Can comment on memories</p>
-                        <p className="text-purple-300 text-xs">Allow members to leave comments</p>
-                      </div>
-                      <input type="checkbox" defaultChecked className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white text-sm">Can download memories</p>
-                        <p className="text-purple-300 text-xs">Allow members to download files</p>
-                      </div>
-                      <input type="checkbox" defaultChecked className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
-                    </div>
+                    
+                  
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-white text-sm">Can invite others</p>
@@ -364,57 +304,7 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
           </div>
         );
 
-      case 'notifications':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-white text-lg font-semibold mb-4">Notification Settings</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-white font-medium">Email Notifications</h4>
-                    <p className="text-purple-300 text-sm">Receive email updates about vault activity</p>
-                  </div>
-                  <button
-                    onClick={() => setVaultData(prev => ({ ...prev, notifications: !prev.notifications }))}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      vaultData.notifications ? 'bg-purple-600' : 'bg-gray-600'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        vaultData.notifications ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <h4 className="text-white font-medium mb-3">Email Preferences</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-purple-200 text-sm">New memory uploads</span>
-                      <input type="checkbox" defaultChecked className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-purple-200 text-sm">New comments</span>
-                      <input type="checkbox" defaultChecked className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-purple-200 text-sm">New members joined</span>
-                      <input type="checkbox" defaultChecked className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-purple-200 text-sm">Weekly digest</span>
-                      <input type="checkbox" className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
+      
       default:
         return null;
     }
@@ -425,18 +315,18 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
       {/* Header */}
       <div className="flex items-center space-x-4 mb-8">
         <button
-          onClick={() => onViewChange('vault-detail', { vault: vaultData.name })}
-          className="p-2 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
+          onClick={() => naivgate(`/family/vaultdetail/${vaultData._id}`)}
+          className="p-2 cursor-pointer text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
         <div>
           <h1 className="text-4xl font-bold text-white mb-2">Vault Settings</h1>
-          <p className="text-purple-200">Manage settings for "{vaultData.name}"</p>
+          <p className="text-purple-200">Manage settings for "{vaultData.vaultName}"</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1">
           <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
@@ -444,11 +334,10 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-all duration-300 ${
-                  activeTab === tab.id
+                className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-all duration-300 ${activeTab === tab.id
                     ? 'bg-purple-600/50 text-white border-r-2 border-purple-400'
                     : 'text-purple-200 hover:text-white hover:bg-white/10'
-                }`}
+                  }`}
               >
                 <tab.icon className="w-5 h-5" />
                 <span>{tab.label}</span>
@@ -469,16 +358,16 @@ const EditVaultSettings = ({ vault, onViewChange }) => {
               <Trash2 className="w-5 h-5" />
               <span>Delete Vault</span>
             </button>
-            
+
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => onViewChange('vault-detail', { vault: vaultData.name })}
+                // onClick={() => onViewChange('vault-detail', { vault: vaultData.name })}
                 className="px-6 py-3 text-purple-300 hover:text-white transition-colors duration-300"
               >
                 Cancel
               </button>
               <button
-                onClick={handleSave}
+                // onClick={handleSave}
                 className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 <Save className="w-5 h-5" />

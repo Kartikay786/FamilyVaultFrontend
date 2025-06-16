@@ -1,43 +1,34 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { Users, Heart, Clock, Settings, Eye, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 
 const VaultOverview = ({ onViewChange }) => {
   const containerRef = useRef(null);
+  const navigate = useNavigate();
+  const [vaults, setVaults] = useState([]);
 
-  const vaults = [
-    {
-      id: 1,
-      name: "Johnson Family Memories",
-      coverImage: "https://images.pexels.com/photos/1128318/pexels-photo-1128318.jpeg?auto=compress&cs=tinysrgb&w=800",
-      memberCount: 12,
-      memoryCount: 347,
-      theme: "from-blue-500 to-purple-600",
-      lastUpdated: "2 hours ago",
-      description: "Our main family vault with memories from all generations"
-    },
-    {
-      id: 2,
-      name: "Grandparents Stories",
-      coverImage: "https://images.pexels.com/photos/1134204/pexels-photo-1134204.jpeg?auto=compress&cs=tinysrgb&w=800",
-      memberCount: 8,
-      memoryCount: 156,
-      theme: "from-green-500 to-teal-600",
-      lastUpdated: "1 day ago",
-      description: "Precious stories and memories from grandma and grandpa"
-    },
-    {
-      id: 3,
-      name: "Kids Growing Up",
-      coverImage: "https://images.pexels.com/photos/1648387/pexels-photo-1648387.jpeg?auto=compress&cs=tinysrgb&w=800",
-      memberCount: 6,
-      memoryCount: 892,
-      theme: "from-pink-500 to-orange-600",
-      lastUpdated: "3 hours ago",
-      description: "Watching our children grow through the years"
+  useEffect(() => {
+    const familyId = localStorage.getItem('familyId');
+    const memberId = localStorage.getItem('memberId');
+
+    const fetchAllVaults = async () => {
+      try {
+        const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/vault/getfamilyvaults/${familyId}/${memberId}`);
+        // console.log(result);
+        setVaults(result?.data?.vaults);
+      }
+      catch (err) {
+        console.log(err);
+      }
     }
-  ];
+
+    fetchAllVaults();
+  }, [])
+
+  // console.log(vaults)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -50,6 +41,8 @@ const VaultOverview = ({ onViewChange }) => {
     return () => ctx.revert();
   }, []);
 
+
+
   return (
     <div ref={containerRef} className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -59,8 +52,8 @@ const VaultOverview = ({ onViewChange }) => {
           <p className="text-purple-200">Manage and explore your family vaults</p>
         </div>
         <button
-          onClick={() => onViewChange('create-vault')}
-          className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+          onClick={() => navigate('/family/createvault')}
+          className="flex items-center space-x-2 cursor-pointer bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
         >
           <Plus className="w-5 h-5" />
           <span>Create New Vault</span>
@@ -71,34 +64,30 @@ const VaultOverview = ({ onViewChange }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
         {vaults.map((vault) => (
           <div
-            key={vault.id}
-            className="group bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-500 hover:transform hover:scale-105"
+            key={vault._id}
+            onClick={() => navigate(`/family/vaultdetail/${vault._id}`)}
+            className="group cursor-pointer bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-500 hover:transform hover:scale-105"
           >
             {/* Cover Image */}
-            <div className="relative h-48 overflow-hidden">
+            <div className="relative h-48  overflow-hidden">
               <img
-                src={vault.coverImage}
-                alt={vault.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                src={`${import.meta.env.VITE_BASE_URL}/images/${vault.coverImage}`}
+                alt={vault.vaultName}
+                className="w-full h-auto object-center object-cover group-hover:scale-110 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-              
+
               {/* Member count overlay */}
               <div className="absolute top-4 right-4 bg-black/30 backdrop-blur-sm rounded-full px-3 py-1 flex items-center space-x-1">
                 <Users className="w-4 h-4 text-white" />
-                <span className="text-white text-sm">{vault.memberCount}</span>
+                <span className="text-white text-sm">{vault.vaultMembers?.length === 0 ? 1 : vault.vaultMembers?.length}</span>
               </div>
 
               {/* Quick Actions */}
-              <div className="absolute bottom-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute bottom-4 right-4 z-10 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+               
                 <button
-                  onClick={() => onViewChange('vault-detail', { vault: vault.name })}
-                  className="p-2 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-colors duration-300"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => onViewChange('edit-vault', { vault: vault.name })}
+                  // onClick={() => navigate('/family/editvault')}
                   className="p-2 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-colors duration-300"
                 >
                   <Settings className="w-4 h-4" />
@@ -109,31 +98,30 @@ const VaultOverview = ({ onViewChange }) => {
             {/* Card Content */}
             <div className="p-6">
               <h3 className="text-xl font-bold text-white mb-2 group-hover:text-purple-200 transition-colors duration-300">
-                {vault.name}
+                {vault.vaultName}
               </h3>
-              
+
               <p className="text-purple-200 text-sm mb-4 line-clamp-2">
                 {vault.description}
               </p>
-              
+
               <div className="flex items-center justify-between text-purple-200 text-sm mb-4">
                 <div className="flex items-center space-x-1">
                   <Heart className="w-4 h-4" />
-                  <span>{vault.memoryCount} memories</span>
+                  <span>{vault.memory?.length} memories</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Clock className="w-4 h-4" />
-                  <span>{vault.lastUpdated}</span>
+                  <span>{new Date(vault.updatedAt).toLocaleDateString()}</span>
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className={`w-16 h-1 bg-gradient-to-r ${vault.theme} rounded-full`}></div>
                 <button
-                  onClick={() => onViewChange('vault-detail', { vault: vault.name })}
                   className="text-purple-300 hover:text-white text-sm font-medium transition-colors duration-300"
                 >
-                  Open Vault →
+                 {vault.privacy}
                 </button>
               </div>
             </div>

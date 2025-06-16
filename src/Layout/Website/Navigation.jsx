@@ -14,6 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import LogoutConfirm from '../../Pages/Website/Setting/LogoutConfrim';
 import axios from 'axios';
+import Uploadmemory from '../../Pages/Website/MemoryMgmt/UploadMemory';
 
 const Navigation = ({ currentView, onViewChange, selectedVault, onLogout }) => {
   const navRef = useRef(null);
@@ -21,7 +22,8 @@ const Navigation = ({ currentView, onViewChange, selectedVault, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showDropdown, setShowDropdown] = useState(null);
   const [loggedIn, setLoggedIn] = useState(true);
-  const [logourPopupOpen, setLogoutPopupOpen] = useState(false);
+  const [logoutPopupOpen, setLogoutPopupOpen] = useState(false);
+  const [addMemoryPopupOpen, setAddMemoryPopupOpen] = useState(false);
 
   useEffect(() => {
     const familyId = localStorage.getItem('familyId');
@@ -37,7 +39,7 @@ const Navigation = ({ currentView, onViewChange, selectedVault, onLogout }) => {
       try {
         const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/member/findMemberByEmailandFamilyId/${familyId}/${loginemail}`);
         // console.log(result);
-        localStorage.setItem('memberId',result?.data?.member?._id);
+        localStorage.setItem('memberId', result?.data?.member?._id);
       }
       catch (err) {
         console.log(err);
@@ -52,35 +54,13 @@ const Navigation = ({ currentView, onViewChange, selectedVault, onLogout }) => {
 
   const tabs = [
     {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: Home,
-      items: [
-        { view: 'dashboard', label: 'Overview', path: '/family/dashboard', },
-        { view: 'vault-overview', label: 'Vault Overview', path: '/family/vaultoverview', },
-        { view: 'recent-memories', label: 'Recent Memories', path: '/family/recentMemory', }
-      ]
-    },
-    {
-      id: 'vault',
-      label: 'Vault Management',
-      icon: FolderOpen,
-      items: [
-        { view: 'create-vault', label: 'Create Vault', path: '/family/createvault', },
-        { view: 'vault-detail', label: 'Vault Details', path: '/family/vaultdetail', },
-        { view: 'edit-vault', label: 'Edit Settings', path: '/family/editvault', }
-      ]
-    },
-    {
       id: 'memory',
       label: 'Memory Management',
       icon: Camera,
       items: [
-        { view: 'upload-memory', label: 'Upload Memory', path: '/family/uploadmemory', },
-        { view: 'memory-details', label: 'Memory Details', path: '/family/memorydetail', },
-        { view: 'edit-memory', label: 'Edit Memory', path: '/family/editmemory', },
+        { view: 'upload-memory', label: 'Upload Memory', open: true, },
+        { view: 'All Media', label: 'All Memories', path: '/family/memorysearch', },
         { view: 'memory-timeline', label: 'Timeline', path: '/family/memorytimeline', },
-        { view: 'memory-search', label: 'Search', path: '/family/memorysearch', }
       ]
     },
     {
@@ -90,7 +70,7 @@ const Navigation = ({ currentView, onViewChange, selectedVault, onLogout }) => {
       items: [
         { view: 'family-tree', label: 'Family Tree', path: '/family/familytree' },
         { view: 'profile', label: 'Profile', path: '/family/familymember' },
-        { view: 'legacy-access', label: 'Legacy Access', path: '/family/legacyacces' }
+        // { view: 'legacy-access', label: 'Legacy Access', path: '/family/legacyacces' }
       ]
     },
     {
@@ -159,6 +139,35 @@ const Navigation = ({ currentView, onViewChange, selectedVault, onLogout }) => {
                 <>
 
                   <div className="hidden lg:flex items-center space-x-1">
+
+                    <div className="relative">
+                      <button
+                        onClick={() => { navigate('/family/dashboard'); setActiveTab('Dashboard')}}
+                        className={`flex items-center cursor-pointer space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${activeTab === 'dashboard'
+                          ? 'bg-white/20 text-white'
+                          : 'text-purple-200 hover:text-white hover:bg-white/10'
+                          }`}
+                      >
+                        <Home className="w-5 h-5" />
+                        <span className="text-sm">Dashboard</span>
+                      </button>
+
+                    </div>
+
+                    <div className="relative">
+                      <button
+                        onClick={() => { navigate('/family/vaultoverview'); setActiveTab('Vault Management')}}
+                        className={`flex items-center cursor-pointer space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${activeTab === 'Vault Management'
+                          ? 'bg-white/20 text-white'
+                          : 'text-purple-200 hover:text-white hover:bg-white/10'
+                          }`}
+                      >
+                        <Home className="w-5 h-5" />
+                        <span className="text-sm">Vault Management</span>
+                      </button>
+
+                    </div>
+
                     {
                       tabs.map((tab) => (
                         <div key={tab.id} className="relative">
@@ -181,7 +190,7 @@ const Navigation = ({ currentView, onViewChange, selectedVault, onLogout }) => {
                               {tab.items.map((item) => (
                                 <button
                                   key={item.view}
-                                  onClick={() => { handleNavClick(item.path) }}
+                                  onClick={() => { handleNavClick(item.path); item?.open ? setAddMemoryPopupOpen(true) : '' }}
                                   className={`w-full text-left px-4 py-3 text-sm transition-colors duration-300 first:rounded-t-lg last:rounded-b-lg ${currentView === item.view
                                     ? 'bg-purple-600/50 text-white'
                                     : 'text-purple-200 cursor-pointer hover:text-white hover:bg-white/10'
@@ -242,8 +251,14 @@ const Navigation = ({ currentView, onViewChange, selectedVault, onLogout }) => {
       </nav>
 
       {
-        logourPopupOpen ? (
-          <LogoutConfirm logourPopupOpen={logourPopupOpen} setLogoutPopupOpen={setLogoutPopupOpen} />
+        logoutPopupOpen ? (
+          <LogoutConfirm logourPopupOpen={logoutPopupOpen} setLogoutPopupOpen={setLogoutPopupOpen} />
+        ) : ''
+      }
+
+      {
+        addMemoryPopupOpen ? (
+          <Uploadmemory openPopup={addMemoryPopupOpen} setAddMemoryPopupOpen={setAddMemoryPopupOpen} />
         ) : ''
       }
     </>

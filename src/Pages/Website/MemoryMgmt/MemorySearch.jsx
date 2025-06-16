@@ -161,7 +161,7 @@ const MemorySearch = ({ onViewChange }) => {
     <div ref={containerRef} className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white mb-2">Search Memories</h1>
+        <h1 className="text-4xl font-bold text-white mb-2">Vault Memories</h1>
         <p className="text-purple-200">Find specific memories across all your family vaults</p>
       </div>
 

@@ -1,17 +1,30 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { ArrowLeft, Save, Trash2, Upload, Tag, X } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 
 
-const EditMemory = ({ memory, onViewChange }) => {
+const EditMemory = ({onViewChange }) => {
   const containerRef = useRef(null);
-  const [memoryData, setMemoryData] = useState({
-    title: memory?.title || "Christmas Morning 2024",
-    description: memory?.description || "A beautiful Christmas morning with the whole family gathered around the tree. The kids were so excited to open their presents!",
-    tags: memory?.tags || ["Christmas", "Family", "Holiday", "2024"],
-    vault: memory?.vault || "Johnson Family Memories"
-  });
-  const [newTag, setNewTag] = useState('');
+  const {memoryId} = useParams();
+  const navigate = useNavigate();
+  const [newTag, setNewTag] = useState(''); 
+  const [memory, setMemory] = useState([]);
+
+  useEffect(() => {
+    const fetchVault = async () => {
+      try {
+        const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/memory/memory/${memoryId}`);
+        setMemory(result?.data?.memory);
+      }
+      catch (err) {
+        console.log(err);
+      }
+    }
+
+    fetchVault();
+  }, [memoryId])
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -52,13 +65,15 @@ const EditMemory = ({ memory, onViewChange }) => {
     }));
   };
 
+
+
   return (
     <div ref={containerRef} className="p-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center space-x-4 mb-8">
         <button
-          onClick={() => onViewChange('memory-details', { memory })}
-          className="p-2 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
+          onClick={() => navigate(`/family/memorydetail/${memory._id}`)}
+          className="p-2 text-purple-300 cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
@@ -80,7 +95,7 @@ const EditMemory = ({ memory, onViewChange }) => {
                 <label className="block text-white text-sm font-medium mb-2">Title</label>
                 <input
                   type="text"
-                  value={memoryData.title}
+                  value={memory.title}
                   onChange={(e) => setMemoryData(prev => ({ ...prev, title: e.target.value }))}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Enter memory title..."
@@ -90,7 +105,7 @@ const EditMemory = ({ memory, onViewChange }) => {
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Description</label>
                 <textarea
-                  value={memoryData.description}
+                  value={memory.description}
                   onChange={(e) => setMemoryData(prev => ({ ...prev, description: e.target.value }))}
                   rows={4}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
@@ -101,8 +116,8 @@ const EditMemory = ({ memory, onViewChange }) => {
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Vault</label>
                 <select
-                  value={memoryData.vault}
-                  onChange={(e) => setMemoryData(prev => ({ ...prev, vault: e.target.value }))}
+                  // value={memory.vault}
+                  // onChange={(e) => setMemoryData(prev => ({ ...prev, vault: e.target.value }))}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="Johnson Family Memories">Johnson Family Memories</option>
@@ -111,49 +126,6 @@ const EditMemory = ({ memory, onViewChange }) => {
                 </select>
               </div>
             </div>
-          </div>
-
-          {/* Tags */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center space-x-2">
-              <Tag className="w-5 h-5" />
-              <span>Tags</span>
-            </h2>
-            
-            {/* Current Tags */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {memoryData.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="flex items-center space-x-2 px-3 py-1 bg-purple-600/30 text-purple-200 rounded-full text-sm border border-purple-500/30"
-                >
-                  <span>#{tag}</span>
-                  <button
-                    onClick={() => handleRemoveTag(tag)}
-                    className="text-purple-300 hover:text-white transition-colors duration-300"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-
-            {/* Add New Tag */}
-            <form onSubmit={handleAddTag} className="flex space-x-3">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add a tag..."
-                className="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-300"
-              >
-                Add
-              </button>
-            </form>
           </div>
 
           {/* Replace Media */}
@@ -192,48 +164,23 @@ const EditMemory = ({ memory, onViewChange }) => {
             <h3 className="text-lg font-semibold text-white mb-4">Current Media</h3>
             <div className="aspect-square bg-black rounded-lg overflow-hidden mb-4">
               <img
-                src={memory?.thumbnail || "https://images.pexels.com/photos/1303098/pexels-photo-1303098.jpeg?auto=compress&cs=tinysrgb&w=400"}
-                alt={memoryData.title}
+                src={`${import.meta.env.VITE_BASE_URL}/images/${memory?.media}`}
+                alt={memory.title}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="text-sm text-purple-200">
-              <p>Type: {memory?.type || 'Photo'}</p>
-              <p>Uploaded: {memory?.date || 'Dec 25, 2024'}</p>
+              <p>Type: {memory?.uploadType }</p>
+              <p>Uploaded: {new Date(memory.createdAt).toDateString() }</p>
             </div>
           </div>
 
-          {/* Memory Stats */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-            <h3 className="text-lg font-semibold text-white mb-4">Memory Stats</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-purple-200">Likes</span>
-                <span className="text-white">{memory?.likes || 12}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-purple-200">Comments</span>
-                <span className="text-white">{memory?.comments || 5}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-purple-200">Views</span>
-                <span className="text-white">47</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-purple-200">Shares</span>
-                <span className="text-white">3</span>
-              </div>
-            </div>
-          </div>
+      
 
           {/* Privacy Settings */}
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
             <h3 className="text-lg font-semibold text-white mb-4">Privacy</h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-purple-200 text-sm">Allow comments</span>
-                <input type="checkbox" defaultChecked className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
-              </div>
               <div className="flex items-center justify-between">
                 <span className="text-purple-200 text-sm">Allow downloads</span>
                 <input type="checkbox" defaultChecked className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
@@ -256,13 +203,13 @@ const EditMemory = ({ memory, onViewChange }) => {
         
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => onViewChange('memory-details', { memory })}
+            // onClick={() => onViewChange('memory-details', { memory })}
             className="px-6 py-3 text-purple-300 hover:text-white transition-colors duration-300"
           >
             Cancel
           </button>
           <button
-            onClick={handleSave}
+            // onClick={handleSave}
             className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
           >
             <Save className="w-5 h-5" />

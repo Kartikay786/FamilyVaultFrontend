@@ -15,10 +15,12 @@ import {
   Upload,
   X
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const ProfileScreen = ({ onViewChange }) => {
   const containerRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState({
     name: "Sarah Johnson",
     role: "Daughter",
@@ -124,7 +126,7 @@ const ProfileScreen = ({ onViewChange }) => {
             </>
           ) : (
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={() => navigate('/family/settings')}
               className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
             >
               <Edit className="w-5 h-5" />

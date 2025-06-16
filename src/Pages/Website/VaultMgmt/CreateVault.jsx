@@ -1,18 +1,30 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { ArrowLeft, Upload, Palette, Users, Save } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const CreateVault = ({ onViewChange }) => {
   const containerRef = useRef(null);
+  const familyId = localStorage.getItem('familyId');
+  const memberId = localStorage.getItem('memberId');
+  const [vaultName, setVaultName] = useState('');
+  const [description, setDescription] = useState('');
+  const [privacy, setPrivacy] = useState('');
+  const [theme, setTheme] = useState('from-purple-500 to-pink-500');
+  const [profileImage, setProfileImage] = useState(null);
+  const navigate = useNavigate();
+
   const [vaultData, setVaultData] = useState({
     name: '',
     description: '',
-    coverImage: null,
+    profileImage: null,
     theme: 'from-purple-500 to-pink-500',
     privacy: 'private',
     inviteEmails: ''
   });
 
+  console.log(theme.theme);
   const themes = [
     { name: 'Purple Pink', value: 'from-purple-500 to-pink-500' },
     { name: 'Blue Cyan', value: 'from-blue-500 to-cyan-500' },
@@ -33,31 +45,44 @@ const CreateVault = ({ onViewChange }) => {
     return () => ctx.revert();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate vault creation
-    gsap.to(containerRef.current, {
-      scale: 0.95,
-      duration: 0.2,
-      yoyo: true,
-      repeat: 1,
-      onComplete: () => onViewChange('vault-overview')
-    });
-  };
+    
+    const formData = new FormData();
+    formData.append('vaultName', vaultName);
+    formData.append('description', description);
+    formData.append('profileImage', profileImage);
+    formData.append('privacy', privacy);
+    formData.append('theme', theme.theme);
+    formData.append('familyId', familyId);
+    formData.append('createdBy', memberId);
 
-  const handleImageUpload = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setVaultData(prev => ({ ...prev, coverImage: e.target.files[0] }));
+    try {
+      const result = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/vault/createVault`, formData);
+      console.log(result);
+    }
+    catch (err) {
+      console.log(err);
+    }
+    finally{
+      setVaultName('');
+      setDescription('');
+      setPrivacy('');
+      setProfileImage(null);
+      setTheme('');
     }
   };
+
+
+  const handleImageUpload = (e) => setProfileImage(e.target.files[0]);
 
   return (
     <div ref={containerRef} className="p-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center space-x-4 mb-8">
         <button
-          onClick={() => onViewChange('vault-overview')}
-          className="p-2 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
+          onClick={() => navigate('/family/vaultoverview')}
+          className="p-2 text-purple-300 cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
@@ -74,14 +99,14 @@ const CreateVault = ({ onViewChange }) => {
             {/* Basic Information */}
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
               <h2 className="text-xl font-semibold text-white mb-4">Basic Information</h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-white text-sm font-medium mb-2">Vault Name</label>
                   <input
                     type="text"
-                    value={vaultData.name}
-                    onChange={(e) => setVaultData(prev => ({ ...prev, name: e.target.value }))}
+                    value={vaultName}
+                    onChange={(e) => setVaultName(e.target.value)}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Enter vault name..."
                     required
@@ -91,8 +116,8 @@ const CreateVault = ({ onViewChange }) => {
                 <div>
                   <label className="block text-white text-sm font-medium mb-2">Description</label>
                   <textarea
-                    value={vaultData.description}
-                    onChange={(e) => setVaultData(prev => ({ ...prev, description: e.target.value }))}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     rows={3}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                     placeholder="Describe your vault..."
@@ -102,13 +127,12 @@ const CreateVault = ({ onViewChange }) => {
                 <div>
                   <label className="block text-white text-sm font-medium mb-2">Privacy Setting</label>
                   <select
-                    value={vaultData.privacy}
-                    onChange={(e) => setVaultData(prev => ({ ...prev, privacy: e.target.value }))}
+                    value={privacy}
+                    onChange={(e) => setPrivacy(e.target.value)}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
-                    <option value="private">Private - Invite only</option>
-                    <option value="family">Family - Family members can join</option>
-                    <option value="public">Public - Anyone can request to join</option>
+                    <option value="Private">Private - Vault members </option>
+                    <option value="Public">Public - All Family Members can View</option>
                   </select>
                 </div>
               </div>
@@ -117,7 +141,7 @@ const CreateVault = ({ onViewChange }) => {
             {/* Cover Image */}
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
               <h2 className="text-xl font-semibold text-white mb-4">Cover Image</h2>
-              
+
               <div className="border-2 border-dashed border-white/30 rounded-lg p-8 text-center hover:border-purple-400 hover:bg-purple-500/10 transition-all duration-300">
                 <Upload className="w-12 h-12 text-purple-300 mx-auto mb-4" />
                 <h3 className="text-white text-lg font-semibold mb-2">
@@ -140,9 +164,9 @@ const CreateVault = ({ onViewChange }) => {
                   <Upload className="w-5 h-5" />
                   <span>Select Image</span>
                 </label>
-                {vaultData.coverImage && (
+                {profileImage && (
                   <p className="text-green-300 text-sm mt-2">
-                    ✓ {vaultData.coverImage.name}
+                    ✓ {vaultName}
                   </p>
                 )}
               </div>
@@ -157,21 +181,20 @@ const CreateVault = ({ onViewChange }) => {
                 <Palette className="w-5 h-5" />
                 <span>Choose Theme</span>
               </h2>
-              
+
               <div className="grid grid-cols-2 gap-3">
-                {themes.map((theme) => (
+                {themes.map((theem) => (
                   <button
-                    key={theme.value}
+                    key={theem.value}
                     type="button"
-                    onClick={() => setVaultData(prev => ({ ...prev, theme: theme.value }))}
-                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                      vaultData.theme === theme.value
+                    onClick={() => setTheme(prev => ({ ...prev, theme: theem.value }))}
+                    className={`p-4 rounded-lg cursor-pointer border-2 transition-all duration-300 ${theme === theem.value
                         ? 'border-white bg-white/10'
                         : 'border-white/20 hover:border-white/40'
-                    }`}
+                      }`}
                   >
-                    <div className={`w-full h-8 bg-gradient-to-r ${theme.value} rounded mb-2`}></div>
-                    <span className="text-white text-sm">{theme.name}</span>
+                    <div className={`w-full h-8 bg-gradient-to-r ${theem.value} rounded mb-2`}></div>
+                    <span className="text-white text-sm">{theem.name}</span>
                   </button>
                 ))}
               </div>
@@ -183,7 +206,7 @@ const CreateVault = ({ onViewChange }) => {
                 <Users className="w-5 h-5" />
                 <span>Invite Members</span>
               </h2>
-              
+
               <div>
                 <label className="block text-white text-sm font-medium mb-2">
                   Email Addresses (comma separated)
@@ -204,14 +227,14 @@ const CreateVault = ({ onViewChange }) => {
             {/* Preview */}
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
               <h2 className="text-xl font-semibold text-white mb-4">Preview</h2>
-              
+
               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <div className={`w-full h-24 bg-gradient-to-r ${vaultData.theme} rounded-lg mb-3`}></div>
+                <div className={`w-full h-24 bg-gradient-to-r ${theme.theme} rounded-lg mb-3`}></div>
                 <h3 className="text-white font-semibold">
-                  {vaultData.name || 'Vault Name'}
+                  {vaultName || 'Vault Name'}
                 </h3>
                 <p className="text-purple-200 text-sm">
-                  {vaultData.description || 'Vault description will appear here...'}
+                  {description || 'Vault description will appear here...'}
                 </p>
               </div>
             </div>
@@ -223,13 +246,13 @@ const CreateVault = ({ onViewChange }) => {
           <button
             type="button"
             onClick={() => onViewChange('vault-overview')}
-            className="px-6 py-3 text-purple-300 hover:text-white transition-colors duration-300"
+            className="px-6 py-3 cursor-pointer text-purple-300 hover:text-white transition-colors duration-300"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+            className="flex cursor-pointer items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
           >
             <Save className="w-5 h-5" />
             <span>Create Vault</span>
