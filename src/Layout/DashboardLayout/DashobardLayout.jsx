@@ -29,7 +29,7 @@ const DashobardLayout = () => {
           onViewChange={setCurrentView}
           selectedVault={selectedVault}
         />
-        <main className="pt-16">
+        <main className="pt-28 sm:pt-24">
           <Outlet />
         </main>
       </div>

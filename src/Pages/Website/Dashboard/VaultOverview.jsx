@@ -9,6 +9,7 @@ const VaultOverview = ({ onViewChange }) => {
   const containerRef = useRef(null);
   const navigate = useNavigate();
   const [vaults, setVaults] = useState([]);
+  const loginType = localStorage.getItem('loginType');
 
   useEffect(() => {
     const familyId = localStorage.getItem('familyId');
@@ -46,19 +47,42 @@ const VaultOverview = ({ onViewChange }) => {
   return (
     <div ref={containerRef} className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-4 items-start md:flex-row md:items-center  justify-between mb-8">
+       
+        {
+          loginType === 'Family' ? '' : (
+            <>
         <div>
           <h1 className="text-4xl font-bold text-white mb-2">Vault Overview</h1>
           <p className="text-purple-200">Manage and explore your family vaults</p>
         </div>
-        <button
-          onClick={() => navigate('/family/createvault')}
-          className="flex items-center space-x-2 cursor-pointer bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Create New Vault</span>
-        </button>
+
+       
+            <button
+              onClick={() => navigate('/family/createvault')}
+              className="flex items-center space-x-2 cursor-pointer bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Create New Vault</span>
+            </button>
+
+            </>
+          )
+        }
+
       </div>
+
+      {
+          loginType === 'Family' ? (
+            <>
+            <h1 className="text-4xl font-bold text-white mb-2 text-center">Vault Feature is only for Family Members</h1>
+            <p className="text-purple-200 text-center">Firstly Add members to your family.</p>
+            <p className="text-purple-200 text-center">Now Login with your Member email and then create or view vault data.</p>
+            </>
+          ) : (
+          ''
+          )
+        }
 
       {/* Vaults Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -80,12 +104,12 @@ const VaultOverview = ({ onViewChange }) => {
               {/* Member count overlay */}
               <div className="absolute top-4 right-4 bg-black/30 backdrop-blur-sm rounded-full px-3 py-1 flex items-center space-x-1">
                 <Users className="w-4 h-4 text-white" />
-                <span className="text-white text-sm">{vault.vaultMembers?.length === 0 ? 1 : vault.vaultMembers?.length}</span>
+                <span className="text-white text-sm">{vault.vaultMembers?.length === 0 ? 1 : vault.vaultMembers?.length + 1}</span>
               </div>
 
               {/* Quick Actions */}
               <div className="absolute bottom-4 right-4 z-10 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-               
+
                 <button
                   // onClick={() => navigate('/family/editvault')}
                   className="p-2 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-colors duration-300"
@@ -121,7 +145,7 @@ const VaultOverview = ({ onViewChange }) => {
                 <button
                   className="text-purple-300 hover:text-white text-sm font-medium transition-colors duration-300"
                 >
-                 {vault.privacy}
+                  {vault.privacy}
                 </button>
               </div>
             </div>
@@ -132,7 +156,7 @@ const VaultOverview = ({ onViewChange }) => {
       {/* Vault Statistics */}
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-white mb-6">Vault Statistics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
             <h3 className="text-lg font-semibold text-white mb-4">Storage Usage</h3>
             <div className="space-y-3">
@@ -160,25 +184,9 @@ const VaultOverview = ({ onViewChange }) => {
             </div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-            <h3 className="text-lg font-semibold text-white mb-4">Activity This Week</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-purple-200">Uploads</span>
-                <span className="text-2xl font-bold text-white">23</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-purple-200">Comments</span>
-                <span className="text-2xl font-bold text-white">47</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-purple-200">Likes</span>
-                <span className="text-2xl font-bold text-white">156</span>
-              </div>
-            </div>
-          </div>
+       
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+          {/* <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
             <h3 className="text-lg font-semibold text-white mb-4">Top Contributors</h3>
             <div className="space-y-3">
               {['Mom', 'Dad', 'Sarah', 'Grandpa'].map((name, index) => (
@@ -195,7 +203,7 @@ const VaultOverview = ({ onViewChange }) => {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

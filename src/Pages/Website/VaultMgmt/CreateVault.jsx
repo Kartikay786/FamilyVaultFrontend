@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ArrowLeft, Upload, Palette, Users, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const CreateVault = ({ onViewChange }) => {
   const containerRef = useRef(null);
@@ -14,6 +15,9 @@ const CreateVault = ({ onViewChange }) => {
   const [theme, setTheme] = useState('from-purple-500 to-pink-500');
   const [profileImage, setProfileImage] = useState(null);
   const navigate = useNavigate();
+  const [previewImage, setPreviewImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
 
   const [vaultData, setVaultData] = useState({
     name: '',
@@ -47,7 +51,7 @@ const CreateVault = ({ onViewChange }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const formData = new FormData();
     formData.append('vaultName', vaultName);
     formData.append('description', description);
@@ -57,15 +61,26 @@ const CreateVault = ({ onViewChange }) => {
     formData.append('familyId', familyId);
     formData.append('createdBy', memberId);
 
+    console.log(formData);
+    setLoading(true);
     try {
       const result = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/vault/createVault`, formData);
       console.log(result);
+      toast.success('Vault Created Successfully.', {
+        position: 'top-center'
+      });
+      navigate('/family/vaultoverview')
     }
     catch (err) {
       console.log(err);
+      toast.error(err.response.data.message, {
+        position: 'top-center'
+      });
     }
-    finally{
+    finally {
+      setLoading(false)
       setVaultName('');
+      setPreviewImage('');
       setDescription('');
       setPrivacy('');
       setProfileImage(null);
@@ -74,7 +89,14 @@ const CreateVault = ({ onViewChange }) => {
   };
 
 
-  const handleImageUpload = (e) => setProfileImage(e.target.files[0]);
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPreviewImage(URL.createObjectURL(file));  // set preview
+      setProfileImage(file);  // this is your existing state
+    }
+  };
+
 
   return (
     <div ref={containerRef} className="p-6 max-w-4xl mx-auto">
@@ -164,11 +186,19 @@ const CreateVault = ({ onViewChange }) => {
                   <Upload className="w-5 h-5" />
                   <span>Select Image</span>
                 </label>
-                {profileImage && (
-                  <p className="text-green-300 text-sm mt-2">
-                    ✓ {vaultName}
-                  </p>
+
+
+                {previewImage && (
+                  <div className="mt-4">
+                    <h4 className="text-white mb-2">Preview:</h4>
+                    <img
+                      src={previewImage}
+                      alt="Cover Preview"
+                      className="w-full max-h-64 object-cover rounded-lg border border-white/20"
+                    />
+                  </div>
                 )}
+
               </div>
             </div>
           </div>
@@ -189,8 +219,8 @@ const CreateVault = ({ onViewChange }) => {
                     type="button"
                     onClick={() => setTheme(prev => ({ ...prev, theme: theem.value }))}
                     className={`p-4 rounded-lg cursor-pointer border-2 transition-all duration-300 ${theme === theem.value
-                        ? 'border-white bg-white/10'
-                        : 'border-white/20 hover:border-white/40'
+                      ? 'border-white bg-white/10'
+                      : 'border-white/20 hover:border-white/40'
                       }`}
                   >
                     <div className={`w-full h-8 bg-gradient-to-r ${theem.value} rounded mb-2`}></div>
@@ -254,8 +284,15 @@ const CreateVault = ({ onViewChange }) => {
             type="submit"
             className="flex cursor-pointer items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
           >
-            <Save className="w-5 h-5" />
-            <span>Create Vault</span>
+            {
+              loading ? 'Creating...' : (
+                <>
+                  <Save className="w-5 h-5" />
+                  <span>Create Vault</span>
+                </>
+              )
+            }
+
           </button>
         </div>
       </form>

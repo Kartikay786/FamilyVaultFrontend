@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { Heart, MessageCircle, Play, Volume2, Camera, Filter, Grid, List } from 'lucide-react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -8,84 +10,35 @@ const RecentMemories = ({ onViewChange }) => {
   const containerRef = useRef(null);
   const [viewMode, setViewMode] = useState('grid');
   const [filterType, setFilterType] = useState('all');
+  const [memories, setMemories] = useState([]);
+  const navigate = useNavigate();
 
-  const memories = [
-    {
-      id: 1,
-      type: 'photo',
-      title: "Christmas Morning 2024",
-      thumbnail: "https://images.pexels.com/photos/1303098/pexels-photo-1303098.jpeg?auto=compress&cs=tinysrgb&w=400",
-      uploadedBy: "Mom",
-      date: "Dec 25, 2024",
-      likes: 12,
-      comments: 5,
-      vault: "Johnson Family Memories"
-    },
-    {
-      id: 2,
-      type: 'video',
-      title: "Kids Playing in Garden",
-      thumbnail: "https://images.pexels.com/photos/1648387/pexels-photo-1648387.jpeg?auto=compress&cs=tinysrgb&w=400",
-      uploadedBy: "Dad",
-      date: "Dec 20, 2024",
-      likes: 8,
-      comments: 3,
-      duration: "2:45",
-      vault: "Kids Growing Up"
-    },
-    {
-      id: 3,
-      type: 'audio',
-      title: "Grandpa's War Stories",
-      thumbnail: null,
-      uploadedBy: "Sarah",
-      date: "Dec 18, 2024",
-      likes: 15,
-      comments: 7,
-      duration: "15:30",
-      vault: "Grandparents Stories"
-    },
-    {
-      id: 4,
-      type: 'photo',
-      title: "Family Dinner Night",
-      thumbnail: "https://images.pexels.com/photos/1128318/pexels-photo-1128318.jpeg?auto=compress&cs=tinysrgb&w=400",
-      uploadedBy: "Emma",
-      date: "Dec 15, 2024",
-      likes: 9,
-      comments: 2,
-      vault: "Johnson Family Memories"
-    },
-    {
-      id: 5,
-      type: 'video',
-      title: "Birthday Celebration",
-      thumbnail: "https://images.pexels.com/photos/1134204/pexels-photo-1134204.jpeg?auto=compress&cs=tinysrgb&w=400",
-      uploadedBy: "Mom",
-      date: "Dec 10, 2024",
-      likes: 18,
-      comments: 9,
-      duration: "4:12",
-      vault: "Johnson Family Memories"
-    },
-    {
-      id: 6,
-      type: 'photo',
-      title: "Sunset Walk",
-      thumbnail: "https://images.pexels.com/photos/1648387/pexels-photo-1648387.jpeg?auto=compress&cs=tinysrgb&w=400",
-      uploadedBy: "Dad",
-      date: "Dec 8, 2024",
-      likes: 6,
-      comments: 1,
-      vault: "Kids Growing Up"
+  useEffect(() => {
+
+    const fetchMemories = async () => {
+      const familyId = localStorage.getItem('familyId');
+
+      try {
+        const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/memory/allfamilymemory/${familyId}`);
+
+        setMemories(result?.data?.memory);
+        // console.log(result?.data?.memory)
+      }
+      catch (err) {
+        console.log(err);
+      }
     }
-  ];
+
+    fetchMemories();
+  }, [])
+
+  // console.log(memories);
 
   const filteredMemories = memories.filter(memory => {
     if (filterType === 'all') return true;
-    if (filterType === 'photos') return memory.type === 'photo';
-    if (filterType === 'videos') return memory.type === 'video';
-    if (filterType === 'audio') return memory.type === 'audio';
+    if (filterType === 'photos') return memory.uploadType === 'Photo';
+    if (filterType === 'videos') return memory.uploadType === 'Video';
+    if (filterType === 'audio') return memory.uploadType === 'Audio';
     return true;
   });
 
@@ -102,20 +55,20 @@ const RecentMemories = ({ onViewChange }) => {
 
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'video':
+      case 'Video':
         return <Play className="w-6 h-6 text-white" />;
-      case 'audio':
+      case 'Audio':
         return <Volume2 className="w-6 h-6 text-white" />;
       default:
         return <Camera className="w-6 h-6 text-white" />;
     }
   };
 
-  const getTypeColor = (type) => {
-    switch (type) {
-      case 'video':
+  const getTypeColor = (uploadType) => {
+    switch (uploadType) {
+      case 'Video':
         return 'from-purple-500 to-pink-500';
-      case 'audio':
+      case 'Audio':
         return 'from-green-500 to-emerald-500';
       default:
         return 'from-blue-500 to-cyan-500';
@@ -140,10 +93,10 @@ const RecentMemories = ({ onViewChange }) => {
               onChange={(e) => setFilterType(e.target.value)}
               className="bg-white/10 border border-white/20 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              <option value="all">All Types</option>
-              <option value="photos">Photos</option>
-              <option value="videos">Videos</option>
-              <option value="audio">Audio</option>
+              <option className='text-purple-900' value="all">All Types</option>
+              <option className='text-purple-900' value="photos">Photos</option>
+              <option className='text-purple-900' value="videos">Videos</option>
+              <option className='text-purple-900' value="audio">Audio</option>
             </select>
           </div>
         </div>
@@ -151,17 +104,15 @@ const RecentMemories = ({ onViewChange }) => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-lg transition-colors duration-300 ${
-              viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-purple-300 hover:text-white'
-            }`}
+            className={`p-2 rounded-lg transition-colors duration-300 ${viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-purple-300 hover:text-white'
+              }`}
           >
             <Grid className="w-5 h-5" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded-lg transition-colors duration-300 ${
-              viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-purple-300 hover:text-white'
-            }`}
+            className={`p-2 rounded-lg transition-colors duration-300 ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-purple-300 hover:text-white'
+              }`}
           >
             <List className="w-5 h-5" />
           </button>
@@ -173,40 +124,35 @@ const RecentMemories = ({ onViewChange }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredMemories.map((memory) => (
             <div
-              key={memory.id}
-              onClick={() => onViewChange('memory-details', { memory })}
+              key={memory._id}
+              onClick={() => navigate(`/family/memorydetail/${memory._id}`)}
               className="group bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 hover:transform hover:scale-105 hover:-translate-y-1 cursor-pointer"
             >
               {/* Media preview */}
               <div className="relative aspect-square overflow-hidden">
-                {memory.thumbnail ? (
+                {memory.uploadType === 'Photo' ? (
                   <img
-                    src={memory.thumbnail}
+                    src={`${import.meta.env.VITE_BASE_URL}/images/${memory.media}`}
                     alt={memory.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                 ) : (
-                  <div className={`w-full h-full bg-gradient-to-br ${getTypeColor(memory.type)} flex items-center justify-center`}>
-                    {getTypeIcon(memory.type)}
+                  <div className={`w-full h-full bg-gradient-to-br ${getTypeColor(memory.uploadType)} flex items-center justify-center`}>
+                    {getTypeIcon(memory.uploadType)}
                   </div>
                 )}
-                
-                {memory.type !== 'photo' && (
+
+                {memory.uploadType !== 'Photo' && (
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                     <div className="w-12 h-12 bg-black/60 rounded-full flex items-center justify-center">
-                      {getTypeIcon(memory.type)}
+                      {getTypeIcon(memory.uploadType)}
                     </div>
                   </div>
                 )}
 
-                {memory.duration && (
-                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                    {memory.duration}
-                  </div>
-                )}
 
                 {/* Type indicator */}
-                <div className={`absolute top-2 left-2 w-6 h-6 bg-gradient-to-br ${getTypeColor(memory.type)} rounded-full flex items-center justify-center`}>
+                <div className={`absolute top-2 left-2 w-6 h-6 bg-gradient-to-br ${getTypeColor(memory.uploadType)} rounded-full flex items-center justify-center`}>
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
               </div>
@@ -217,24 +163,16 @@ const RecentMemories = ({ onViewChange }) => {
                   {memory.title}
                 </h3>
                 <p className="text-purple-200 text-sm mb-1">
-                  By {memory.uploadedBy} • {memory.date}
+                  By {memory.uploadBy?.memberName || 'Family'}
+                </p>
+                <p className="text-purple-200 text-sm mb-1">
+                  • {new Date(memory.createdAt).toDateString()}
                 </p>
                 <p className="text-purple-300 text-xs mb-3">
-                  {memory.vault}
+                  {memory?.vaultId?.vaultName}
                 </p>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-purple-300 text-sm">
-                    <span className="flex items-center space-x-1 hover:text-pink-400 transition-colors duration-300">
-                      <Heart className="w-4 h-4" />
-                      <span>{memory.likes}</span>
-                    </span>
-                    <span className="flex items-center space-x-1 hover:text-blue-400 transition-colors duration-300">
-                      <MessageCircle className="w-4 h-4" />
-                      <span>{memory.comments}</span>
-                    </span>
-                  </div>
-                </div>
+
+
               </div>
             </div>
           ))}
@@ -243,34 +181,34 @@ const RecentMemories = ({ onViewChange }) => {
         <div className="space-y-4">
           {filteredMemories.map((memory) => (
             <div
-              key={memory.id}
-              onClick={() => onViewChange('memory-details', { memory })}
+              key={memory._id}
+              onClick={() => navigate(`/family/memorydetail/${memory._id}`)}
               className="group bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 hover:transform hover:scale-[1.02] cursor-pointer"
             >
               <div className="flex items-center space-x-4">
                 {/* Thumbnail */}
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                  {memory.thumbnail ? (
+                  {memory.uploadType === 'Photo' ? (
                     <img
-                      src={memory.thumbnail}
+                      src={`${import.meta.env.VITE_BASE_URL}/images/${memory.media}`}
                       alt={memory.title}
                       className="w-full h-full object-cover"
                     />
+                  ) : memory.uploadType === 'Video' ? (
+                    <video muted autoPlay className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" >
+                      <source src={`${import.meta.env.VITE_BASE_URL}/video/${memory.media}`} type='video/mp4' />
+                    </video>
                   ) : (
-                    <div className={`w-full h-full bg-gradient-to-br ${getTypeColor(memory.type)} flex items-center justify-center`}>
-                      {getTypeIcon(memory.type)}
+                    <div className={`w-full h-full bg-gradient-to-br ${getTypeColor(memory.uploadType)} flex items-center justify-center`}>
+                      {getTypeIcon(memory.uploadType)}
                     </div>
                   )}
-                  {memory.type !== 'photo' && (
+                  {memory.uploadType !== 'photo' && (
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      {getTypeIcon(memory.type)}
+                      {getTypeIcon(memory.uploadType)}
                     </div>
                   )}
-                  {memory.duration && (
-                    <div className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1 rounded">
-                      {memory.duration}
-                    </div>
-                  )}
+
                 </div>
 
                 {/* Content */}
@@ -279,21 +217,12 @@ const RecentMemories = ({ onViewChange }) => {
                     {memory.title}
                   </h3>
                   <p className="text-purple-200 text-sm mb-1">
-                    Uploaded by {memory.uploadedBy} • {memory.date}
+                    Upload  By {memory.uploadBy?.memberName || 'Family'} • {new Date(memory.createdAt).toDateString()}
                   </p>
                   <p className="text-purple-300 text-xs mb-2">
-                    {memory.vault}
+                    {memory?.vaultId?.vaultName}
                   </p>
-                  <div className="flex items-center space-x-4 text-purple-300 text-sm">
-                    <span className="flex items-center space-x-1">
-                      <Heart className="w-4 h-4" />
-                      <span>{memory.likes}</span>
-                    </span>
-                    <span className="flex items-center space-x-1">
-                      <MessageCircle className="w-4 h-4" />
-                      <span>{memory.comments}</span>
-                    </span>
-                  </div>
+
                 </div>
               </div>
             </div>

@@ -24,45 +24,53 @@ import AccessControl from './Pages/Website/Setting/AccessControl'
 import Settings from './Pages/Website/Setting/Settings'
 import AddMember from './Pages/Website/FamilyTree/AddMember'
 import FamilyMember from './Pages/Website/FamilyTree/FamilyMembers'
+import { ToastContainer } from 'react-toastify'
+import AddExistingMember from './Pages/Website/FamilyTree/AddExistingMember'
+import PageLoader from './Component/Loader/PageLoader'
 
 const App = () => {
   return (
     <>
-     <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<WebsiteLayout/>} >
-          <Route index element={<HomePage/>} />
-        </Route>
+      <BrowserRouter>
 
-        <Route path='/auth' element={<AuthLayout/>}>
-            <Route path='login' element={<LoginScreen/>} />
-            <Route path='register' element={<RegisterScreen/>} />
-            <Route path='forgotpassword' element={<ForgotPasswordScreen/>} />
-        </Route>
+        <ToastContainer />
+        <Routes>
 
-        <Route path='/family' element={<DashobardLayout/>}>
-            <Route path='dashboard' element={<Dashboard/>} /> 
-            <Route path='vaultoverview' element={<VaultOverview/>} /> 
-            <Route path='recentMemory' element={<RecentMemories/>} /> 
-            <Route path='createvault' element={<CreateVault/>} />
-            <Route path='editvault/:vaultId' element={<EditVaultSettings/>} />
-            <Route path='vaultdetail/:vaultId' element={<VaultDetail/>} />
-            <Route path='editmemory/:memoryId' element={<EditMemory/>} />
-            <Route path='memorydetail/:memoryId' element={<MemoryDetails/>} />
-            <Route path='memorysearch' element={<MemorySearch/>} />
-            <Route path='memorytimeline' element={<MemoryTimeline/>} />
-            <Route path='uploadmemory' element={<Uploadmemory/>} />
-            <Route path='familytree' element={<FamilyTree/>} />
-            <Route path='profile' element={<ProfileScreen/>} />
-            <Route path='legacyacces' element={<LegacyAccess/>} />
-            <Route path='accessControl' element={<AccessControl/>} />
-            <Route path='setting' element={<Settings/>} />
-            <Route path='addMember' element={<AddMember/>} />
-            <Route path='familymember' element={<FamilyMember/>} />
-        </Route>
-        
-      </Routes>
-     </BrowserRouter> 
+          <Route path='/' element={<WebsiteLayout />} >
+            <Route index element={<HomePage />} />
+          </Route>
+
+          <Route path='/auth' element={<AuthLayout />}>
+            <Route path='login' element={<LoginScreen />} />
+            <Route path='register' element={<RegisterScreen />} />
+            <Route path='forgotpassword' element={<ForgotPasswordScreen />} />
+          </Route>
+
+          <Route path='/family' element={<DashobardLayout />}>
+            <Route path='dashboard' element={<Dashboard />} />
+            <Route path='vaultoverview' element={<VaultOverview />} />
+            <Route path='recentMemory' element={<RecentMemories />} />
+            <Route path='createvault' element={<CreateVault />} />
+            <Route path='editvault/:vaultId' element={<EditVaultSettings />} />
+            <Route path='vaultdetail/:vaultId' element={<VaultDetail />} />
+            <Route path='editmemory/:memoryId' element={<EditMemory />} />
+            <Route path='memorydetail/:memoryId' element={<MemoryDetails />} />
+            <Route path='memorysearch' element={<MemorySearch />} />
+            <Route path='memorytimeline' element={<MemoryTimeline />} />
+            <Route path='uploadmemory' element={<Uploadmemory />} />
+            <Route path='familytree' element={<FamilyTree />} />
+            <Route path='profile' element={<ProfileScreen />} />
+            <Route path='legacyacces' element={<LegacyAccess />} />
+            <Route path='accessControl' element={<AccessControl />} />
+            <Route path='setting' element={<Settings />} />
+            <Route path='addMember' element={<AddMember />} />
+            <Route path='familymember' element={<FamilyMember />} />
+            <Route path='addexistingmember' element={<AddExistingMember/>} />
+          </Route>
+
+          <Route path='/load' element={<PageLoader isLoading={true}/>} />
+        </Routes>
+      </BrowserRouter>
     </>
   )
 }

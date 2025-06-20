@@ -13,7 +13,8 @@ import {
     Users,
     Shield,
     Crown,
-    Baby
+    Baby,
+    Plus
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { familProfileFunction } from '../../../Redux/Reducers/FamilyProfile.slice.jsx';
@@ -27,18 +28,7 @@ const FamilyMember = ({ member, onViewChange }) => {
     const { family, loading } = useSelector((state) => state.familyProfile);
     const [activeTab, setActiveTab] = useState('overview');
     const [familyData,setFamilyData] = useState({});
-
-    // useEffect(() => {
-    //     console.log("✅ useEffect running");
-    //     const familyId = localStorage.getItem('familyId');
-    //     console.log("familyId:", familyId); // Should log a 24-character string
-    //     if (!familyId) {
-    //         console.error("❌ No familyId in localStorage");
-    //         return;
-    //     }
-    //     console.log("⬇ Dispatching thunk...");
-    //     dispatch(familProfileFunction(familyId)); // Trim whitespace
-    // }, [dispatch]);
+      const [statsdata,setStatsdata] = useState([]);
 
     useEffect(() => {
         const familyId = localStorage.getItem('familyId');
@@ -118,10 +108,21 @@ const FamilyMember = ({ member, onViewChange }) => {
         ]
     };
 
+    useEffect(()=>{
+    const familyId = localStorage.getItem('familyId');
+
+    const fetchStats = async () => {
+      const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/family/allstats/${familyId}`);
+      console.log(result.data);
+      setStatsdata(result.data);
+    }
+
+    fetchStats()
+  },[])
+
     const tabs = [
         { id: 'overview', label: 'Overview', icon: Users },
         { id: 'connections', label: 'Members', icon: Heart },
-        { id: 'memories', label: 'Memories', icon: Camera },
     ];
 
     useEffect(() => {
@@ -220,15 +221,15 @@ const FamilyMember = ({ member, onViewChange }) => {
                 <h3 className="text-lg font-semibold text-white mb-4">Family Statistics</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-400 mb-1">{memberData.memories.uploaded}</div>
+                        <div className="text-2xl font-bold text-blue-400 mb-1">{statsdata?.totalMemory}</div>
                         <div className="text-purple-200 text-sm">Memories</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-red-400 mb-1">{familyData.member?.length}</div>
+                        <div className="text-2xl font-bold text-red-400 mb-1">{statsdata?.totalmember}</div>
                         <div className="text-purple-200 text-sm">Members</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-green-400 mb-1">{memberData.memories.commented}</div>
+                        <div className="text-2xl font-bold text-green-400 mb-1">{statsdata?.totalvault}</div>
                         <div className="text-purple-200 text-sm">Vault</div>
                     </div>
 
@@ -248,16 +249,21 @@ const FamilyMember = ({ member, onViewChange }) => {
                             onClick={() => onViewChange('member-details', { member: member })}
                             className="flex items-center space-x-4 bg-white/5 rounded-lg p-4 border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer hover:transform hover:scale-105"
                         >
-                            <div className="w-12 h-12 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                            <div className="w-20 h-20 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
                                 {
                                     member.member?.profileImage ? (
-                                        <img className='h-auto w-12 bg-cover bg-center scale-150' src={`${import.meta.env.VITE_BASE_URL}/images/${member.member.profileImage}`}/>
+                                        <img className='h-auto w-20 bg-cover bg-center scale-150' src={`${import.meta.env.VITE_BASE_URL}/images/${member.member.profileImage}`}/>
                                     ): ''
                                 }
                             </div>
                             <div className="flex-1">
                                 <h4 className="text-white font-medium">{member.member.memberName}</h4>
-                                <p className="text-purple-300 text-sm capitalize">{member.member.relation}</p>
+                                <p className="text-purple-300 text-sm capitalize">{member.relation}</p>
+                                <p className="text-purple-300 text-sm capitalize">{member.member.Dob}</p>
+                                <p className="text-purple-300 text-sm ">{member.member.email}</p>
+                                <p className="text-purple-300 text-sm capitalize">{member.member.phone}</p>
+                                <p className="text-purple-300 text-sm capitalize">{member.role}</p>
+                                <p className="text-purple-300 text-sm mt-2 ">{member.member.bio}</p>
                             </div>
                             <div className={`w-3 h-3 rounded-full ${'active' === 'active' ? 'bg-green-400' : 'bg-gray-400'
                                 }`}></div>
@@ -410,14 +416,18 @@ const FamilyMember = ({ member, onViewChange }) => {
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                    <button className="flex items-center space-x-2 bg-white/10 border border-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-300">
-                        <MessageCircle className="w-4 h-4" />
-                        <span>Message</span>
+                <div className="hidden md:flex items-center space-x-3">
+                     <button
+                        onClick={() => navigate('/family/addMember')}
+                        className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Add Member</span>
                     </button>
+
                     <button
-                        onClick={() => onViewChange('profile', { member: memberData })}
-                        className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                        onClick={() => navigate('/family/setting')}
+                        className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
                     >
                         <Edit className="w-4 h-4" />
                         <span>Edit Profile</span>
@@ -427,6 +437,27 @@ const FamilyMember = ({ member, onViewChange }) => {
                     </button> */}
                 </div>
             </div>
+
+            <div className="flex md:hidden mb-4 flex-wrap gap-2  items-center space-x-3">
+                     <button
+                        onClick={() => navigate('/family/addMember')}
+                        className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Add Member</span>
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/family/setting')}
+                        className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                    >
+                        <Edit className="w-4 h-4" />
+                        <span>Edit</span>
+                    </button>
+                    {/* <button className="p-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
+                        <MoreHorizontal className="w-5 h-5" />
+                    </button> */}
+                </div>
 
             {/* Tabs */}
             <div className="flex space-x-1 mb-8 bg-white/5 backdrop-blur-sm rounded-xl p-1 border border-white/10">

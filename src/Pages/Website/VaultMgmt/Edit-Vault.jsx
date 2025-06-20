@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 
 const EditVaultSettings = ({ onViewChange }) => {
@@ -22,6 +23,9 @@ const EditVaultSettings = ({ onViewChange }) => {
   const [activeTab, setActiveTab] = useState('general');
   const naivgate = useNavigate();
   const [vaultData, setVaultData] = useState([]);
+  const [profileImage, setProfileImage] = useState('');
+  const [previewImage, setPreviewImage] = useState(null);
+
 
   useEffect(() => {
 
@@ -36,7 +40,7 @@ const EditVaultSettings = ({ onViewChange }) => {
     }
 
     fetchVault();
-  },[])
+  }, [])
 
   console.log(vaultData)
 
@@ -49,19 +53,11 @@ const EditVaultSettings = ({ onViewChange }) => {
     { name: 'Teal Blue', value: 'from-teal-500 to-blue-500' }
   ];
 
-  const members = [
-    { name: 'Mom', email: 'mom@email.com', role: 'Admin', avatar: 'M' },
-    { name: 'Dad', email: 'dad@email.com', role: 'Admin', avatar: 'D' },
-    { name: 'Sarah', email: 'sarah@email.com', role: 'Member', avatar: 'S' },
-    { name: 'Emma', email: 'emma@email.com', role: 'Member', avatar: 'E' },
-    { name: 'Grandpa', email: 'grandpa@email.com', role: 'Member', avatar: 'G' }
-  ];
-
   const tabs = [
     { id: 'general', label: 'General', icon: Shield },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'members', label: 'Members', icon: Users },
-    { id: 'privacy', label: 'Privacy', icon: Eye },
+    // { id: 'privacy', label: 'Privacy', icon: Eye },
   ];
 
   useEffect(() => {
@@ -75,21 +71,66 @@ const EditVaultSettings = ({ onViewChange }) => {
     return () => ctx.revert();
   }, []);
 
-  const handleSave = () => {
-    gsap.to(containerRef.current, {
-      scale: 0.95,
-      duration: 0.2,
-      yoyo: true,
-      repeat: 1,
-      onComplete: () => onViewChange('vault-detail', { vault: vaultData.name })
-    });
-  };
-
   const handleImageUpload = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setVaultData(prev => ({ ...prev, coverImage: e.target.files[0] }));
+    const file = e.target.files[0];
+    if (file) {
+      setPreviewImage(URL.createObjectURL(file));  // set preview
+      setProfileImage(file);  // this is your existing state
     }
   };
+
+
+
+  const handleEditvault = async (e) => {
+    e.preventDefault();
+    const formdata = new FormData();
+    formdata.append('vaultName', vaultData.vaultName);
+    formdata.append('description', vaultData.description);
+    formdata.append('privacy', vaultData.privacy);
+    formdata.append('theme', vaultData.theme);
+    formdata.append('profileImage', profileImage);
+
+
+    try {
+      const result = await axios.put(`${import.meta.env.VITE_BASE_URL}/api/vault/editVault/${vaultId}`, formdata);
+
+      toast.success('Vault Edited');
+      naivgate(`/family/vaultdetail/${vaultData._id}`)
+    }
+    catch (err) {
+      console.log(err);
+      toast.error(err.response.data?.message)
+    }
+
+  }
+
+  const deleteMember = async (id) => {
+    try {
+      const result = await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/vault/deleteMemberToVault/${vaultId}/${id}`);
+
+      toast.success('Member delted from vault');
+      naivgate(`/family/vaultdetail/${vaultData._id}`)
+    }
+    catch (err) {
+      console.log(err);
+      toast.error(err.response.data?.message)
+    }
+  }
+
+
+  const deleteVault = async (id) => {
+    const familyId = localStorage.getItem('familyId');
+    try {
+      const result = await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/vault/deleteVault/${vaultId}/${familyId}`);
+
+      toast.success('vault deleted');
+      naivgate(`/family/vaultoverview`)
+    }
+    catch (err) {
+      console.log(err);
+      toast.error(err.response.data?.message)
+    }
+  }
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -100,7 +141,9 @@ const EditVaultSettings = ({ onViewChange }) => {
               <label className="block text-white text-sm font-medium mb-2">Vault Name</label>
               <input
                 type="text"
+                name='vaultName'
                 value={vaultData.vaultName}
+                disabled
                 onChange={(e) => setVaultData(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
@@ -124,7 +167,7 @@ const EditVaultSettings = ({ onViewChange }) => {
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="Private">Private - Invite only</option>
-                 <option value="Public">Public - Anyone can request to join</option>
+                <option value="Public">Public - Anyone can request to join</option>
               </select>
             </div>
 
@@ -158,11 +201,18 @@ const EditVaultSettings = ({ onViewChange }) => {
                   <Upload className="w-5 h-5" />
                   <span>Select Image</span>
                 </label>
-                {vaultData.coverImage && (
-                  <p className="text-green-300 text-sm mt-2">
-                    ✓ {vaultData.vaultName}
-                  </p>
+                
+                {previewImage && (
+                  <div className="mt-4">
+                    <h4 className="text-white mb-2">Preview:</h4>
+                    <img
+                      src={previewImage}
+                      alt="Cover Preview"
+                      className="w-full max-h-64 object-cover rounded-lg border border-white/20"
+                    />
+                  </div>
                 )}
+
               </div>
             </div>
 
@@ -175,8 +225,8 @@ const EditVaultSettings = ({ onViewChange }) => {
                     type="button"
                     onClick={() => setVaultData(prev => ({ ...prev, theme: theme.value }))}
                     className={`p-4 rounded-lg border-2 transition-all duration-300 ${vaultData.theme === theme.value
-                        ? 'border-white bg-white/10'
-                        : 'border-white/20 hover:border-white/40'
+                      ? 'border-white bg-white/10'
+                      : 'border-white/20 hover:border-white/40'
                       }`}
                   >
                     <div className={`w-full h-8 bg-gradient-to-r ${theme.value} rounded mb-2`}></div>
@@ -204,42 +254,56 @@ const EditVaultSettings = ({ onViewChange }) => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-white text-lg font-semibold">Vault Members</h3>
-              <button className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+              {/* <button className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
                 <Users className="w-4 h-4" />
                 <span>Invite Members</span>
-              </button>
+              </button> */}
+            </div>
+
+            <div className="flex items-center justify-between bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                  {
+                    vaultData.createdBy?.profileImage ? (
+                      <img className='h-auto w-12 bg-cover bg-center scale-150' src={`${import.meta.env.VITE_BASE_URL}/images/${vaultData.createdBy?.profileImage}`} />
+                    ) : ''
+                  }
+                </div>
+                <div>
+                  <p className="text-white font-medium">{vaultData.createdBy.memberName}</p>
+                  <p className="text-purple-300 text-sm">{vaultData.createdBy.email}</p>
+                </div>
+              </div>
+
             </div>
 
             <div className="space-y-3">
-              {members.map((member, index) => (
+              {vaultData.vaultMembers.map((member, index) => (
                 <div key={index} className="flex items-center justify-between bg-white/5 rounded-lg p-4 border border-white/10">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
-                      {member.avatar}
+                    <div className="w-12 h-12 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                      {
+                        member?.profileImage ? (
+                          <img className='h-auto w-12 bg-cover bg-center scale-150' src={`${import.meta.env.VITE_BASE_URL}/images/${member?.profileImage}`} />
+                        ) : ''
+                      }
                     </div>
                     <div>
-                      <p className="text-white font-medium">{member.name}</p>
+                      <p className="text-white font-medium">{member.memberName}</p>
                       <p className="text-purple-300 text-sm">{member.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <select
-                      value={member.role}
-                      className="bg-white/10 border border-white/20 rounded px-3 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    >
-                      <option value="Admin">Admin</option>
-                      <option value="Member">Member</option>
-                      <option value="Viewer">Viewer</option>
-                    </select>
+
                     <button className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-all duration-300">
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 onClick={() => deleteMember(member._id)} className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div>
+            {/* <div>
               <h4 className="text-white font-medium mb-3">Invite New Members</h4>
               <div className="flex space-x-3">
                 <input
@@ -251,7 +315,7 @@ const EditVaultSettings = ({ onViewChange }) => {
                   Send Invite
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         );
 
@@ -288,8 +352,8 @@ const EditVaultSettings = ({ onViewChange }) => {
                       </div>
                       <input type="checkbox" defaultChecked className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500" />
                     </div>
-                    
-                  
+
+
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-white text-sm">Can invite others</p>
@@ -304,7 +368,7 @@ const EditVaultSettings = ({ onViewChange }) => {
           </div>
         );
 
-      
+
       default:
         return null;
     }
@@ -326,7 +390,7 @@ const EditVaultSettings = ({ onViewChange }) => {
         </div>
       </div>
 
-       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1">
           <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
@@ -335,8 +399,8 @@ const EditVaultSettings = ({ onViewChange }) => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-all duration-300 ${activeTab === tab.id
-                    ? 'bg-purple-600/50 text-white border-r-2 border-purple-400'
-                    : 'text-purple-200 hover:text-white hover:bg-white/10'
+                  ? 'bg-purple-600/50 text-white border-r-2 border-purple-400'
+                  : 'text-purple-200 hover:text-white hover:bg-white/10'
                   }`}
               >
                 <tab.icon className="w-5 h-5" />
@@ -354,21 +418,16 @@ const EditVaultSettings = ({ onViewChange }) => {
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between mt-8">
-            <button className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors duration-300">
+            <button onClick={deleteVault} className="flex cursor-pointer items-center space-x-2 text-red-400 hover:text-red-300 transition-colors duration-300">
               <Trash2 className="w-5 h-5" />
               <span>Delete Vault</span>
             </button>
 
             <div className="flex items-center space-x-4">
+
               <button
-                // onClick={() => onViewChange('vault-detail', { vault: vaultData.name })}
-                className="px-6 py-3 text-purple-300 hover:text-white transition-colors duration-300"
-              >
-                Cancel
-              </button>
-              <button
-                // onClick={handleSave}
-                className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                onClick={handleEditvault}
+                className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 <Save className="w-5 h-5" />
                 <span>Save Changes</span>

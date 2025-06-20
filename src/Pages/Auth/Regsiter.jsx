@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { Heart, Eye, EyeOff, Mail, Lock, User, Image } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 
 const RegisterScreen = ({ onRegister }) => {
@@ -10,12 +11,12 @@ const RegisterScreen = ({ onRegister }) => {
   const navigate = useNavigate();
   const formRef = useRef(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [familyName,setFamilyName] = useState('');
-  const [description,setDescription] = useState('');
-  const [email,setEmail] = useState('');
-  const [password,setPassword] = useState('');
-  const [profileImage,setProfileImage] = useState(null);
-  const [loading,setLoading] = useState(false);
+  const [familyName, setFamilyName] = useState('');
+  const [description, setDescription] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleImage = (e) => setProfileImage(e.target.files[0]);
 
@@ -36,34 +37,40 @@ const RegisterScreen = ({ onRegister }) => {
   }, []);
 
 
-  const handleRegisterFamily = async (e)=>{
+  const handleRegisterFamily = async (e) => {
     e.preventDefault();
 
     const newformData = new FormData();
-    newformData.append('familyName',familyName);
-    newformData.append('description',description);
-    newformData.append('email',email);
-    newformData.append('password',password);
-    newformData.append('profileImage',profileImage);
+    newformData.append('familyName', familyName);
+    newformData.append('description', description);
+    newformData.append('email', email);
+    newformData.append('password', password);
+    newformData.append('profileImage', profileImage);
 
     console.log(newformData);
     setLoading(true);
-    try{
-      const result = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/family/registerfamily`,newformData);
+    try {
+      const result = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/family/registerfamily`, newformData);
       console.log(result);
+      toast.success('Your Family Registered Successfully. Now Login...', {
+        position: 'top-center'
+      });
       navigate('/auth/login');
     }
-   catch(err){
-     console.log(err);
-   }
-   finally{
-    setLoading(false)
-    setDescription('');
-    setEmail('');
-    setFamilyName('');
-    setPassword('');
-    setProfileImage(null)
-   }
+    catch (err) {
+      console.log(err);
+      toast.error(err.response.data.message, {
+        position: 'top-center'
+      });
+    }
+    finally {
+      setLoading(false)
+      setDescription('');
+      setEmail('');
+      setFamilyName('');
+      setPassword('');
+      setProfileImage(null)
+    }
 
   }
 
@@ -143,6 +150,7 @@ const RegisterScreen = ({ onRegister }) => {
                 <Image className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-300" />
                 <input
                   type="file"
+                  accept='image/*'
                   onChange={handleImage}
                   className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Enter your email"

@@ -3,20 +3,26 @@ import { gsap } from 'gsap';
 import { ArrowLeft, Save, Trash2, Upload, Tag, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 
-const EditMemory = ({onViewChange }) => {
+const EditMemory = ({ onViewChange }) => {
   const containerRef = useRef(null);
-  const {memoryId} = useParams();
+  const { memoryId } = useParams();
   const navigate = useNavigate();
-  const [newTag, setNewTag] = useState(''); 
   const [memory, setMemory] = useState([]);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('')
+  const [uploadType, setUploadType] = useState('');
+  const [media,setMedia] = useState('');
 
   useEffect(() => {
     const fetchVault = async () => {
       try {
         const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/memory/memory/${memoryId}`);
         setMemory(result?.data?.memory);
+        setTitle(result?.data?.memory?.title);
+        setDescription(result?.data?.memory?.description);
       }
       catch (err) {
         console.log(err);
@@ -37,35 +43,38 @@ const EditMemory = ({onViewChange }) => {
     return () => ctx.revert();
   }, []);
 
-  const handleSave = () => {
-    gsap.to(containerRef.current, {
-      scale: 0.95,
-      duration: 0.2,
-      yoyo: true,
-      repeat: 1,
-      onComplete: () => onViewChange('memory-details', { memory: { ...memory, ...memoryData } })
-    });
-  };
+  const EditMemory = async () => {
+    // e.preventDeafult();
 
-  const handleAddTag = (e) => {
-    e.preventDefault();
-    if (newTag.trim() && !memoryData.tags.includes(newTag.trim())) {
-      setMemoryData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
-      setNewTag('');
+    const formData = new FormData();
+    formData.append('title',title);
+    formData.append('description',description);
+    formData.append('uploadType',uploadType);
+    uploadType === 'Photo' ? 
+    formData.append('profileImage',media) :
+    formData.append('video',media) 
+
+    try {
+      const result = await axios.put(`${import.meta.env.VITE_BASE_URL}/api/memory/editMemory/${memoryId}`,formData);
+      console.log(result);
     }
-  };
+    catch (err) {
+      console.log(err);
+    }
+  }
 
-  const handleRemoveTag = (tagToRemove) => {
-    setMemoryData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
-
+  const deleteMemory = async (vaultId,id)=>{
+    const familyId = localStorage.getItem('familyId');
+       try {
+      const result = await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/memory/deleteMemory/${familyId}/${vaultId}/${id}`);
+      toast.success('Member delted from vault');
+      navigate(`/family/dashboard`)
+    }
+    catch (err) {
+      console.log(err);
+      toast.error(err.response.data?.message)
+    }
+  }
 
   return (
     <div ref={containerRef} className="p-6 max-w-4xl mx-auto">
@@ -89,14 +98,14 @@ const EditMemory = ({onViewChange }) => {
           {/* Basic Information */}
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4">Basic Information</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Title</label>
                 <input
                   type="text"
-                  value={memory.title}
-                  onChange={(e) => setMemoryData(prev => ({ ...prev, title: e.target.value }))}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Enter memory title..."
                 />
@@ -105,33 +114,53 @@ const EditMemory = ({onViewChange }) => {
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Description</label>
                 <textarea
-                  value={memory.description}
-                  onChange={(e) => setMemoryData(prev => ({ ...prev, description: e.target.value }))}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   rows={4}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                   placeholder="Describe your memory..."
                 />
               </div>
 
+
+              {
+                memory?.vaultId ? (
+                  <div>
+                    <label className="block text-white text-sm font-medium mb-2">Vault</label>
+                    <select
+                      disabled
+                      // value={memory.vault}
+                      // onChange={(e) => setMemoryData(prev => ({ ...prev, vault: e.target.value }))}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="Johnson Family Memories">{memory?.vaultId?.vaultName}</option>
+
+                    </select>
+                  </div>
+                ) : ''
+              }
+
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Vault</label>
                 <select
-                  // value={memory.vault}
-                  // onChange={(e) => setMemoryData(prev => ({ ...prev, vault: e.target.value }))}
+                  required
+                  value={uploadType}
+                  onChange={(e) => setUploadType(e.target.value)}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  <option value="Johnson Family Memories">Johnson Family Memories</option>
-                  <option value="Grandparents Stories">Grandparents Stories</option>
-                  <option value="Kids Growing Up">Kids Growing Up</option>
+                  <option value="Photo">Photo</option>
+                  <option value="Video">Video</option>
+                  <option value="Audio">Audio</option>
                 </select>
               </div>
+
             </div>
           </div>
 
           {/* Replace Media */}
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4">Replace Media</h2>
-            
+
             <div className="border-2 border-dashed border-white/30 rounded-lg p-8 text-center hover:border-purple-400 hover:bg-purple-500/10 transition-all duration-300">
               <Upload className="w-12 h-12 text-purple-300 mx-auto mb-4" />
               <h3 className="text-white text-lg font-semibold mb-2">
@@ -145,6 +174,7 @@ const EditMemory = ({onViewChange }) => {
                 accept="image/*,video/*,audio/*"
                 className="hidden"
                 id="media-upload"
+                onChange={(e)=>setMedia(e.target.files[0])}
               />
               <label
                 htmlFor="media-upload"
@@ -170,12 +200,13 @@ const EditMemory = ({onViewChange }) => {
               />
             </div>
             <div className="text-sm text-purple-200">
-              <p>Type: {memory?.uploadType }</p>
-              <p>Uploaded: {new Date(memory.createdAt).toDateString() }</p>
+              <p>Type: {memory?.uploadType}</p>
+              <p>Uploaded: {new Date(memory.createdAt).toDateString()}</p>
+
             </div>
           </div>
 
-      
+
 
           {/* Privacy Settings */}
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
@@ -196,21 +227,16 @@ const EditMemory = ({onViewChange }) => {
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/20">
-        <button className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors duration-300">
+        <button onClick={()=>deleteMemory(memory?.vaultId?._id,memory._id)} className="flex cursor-pointer items-center space-x-2 text-red-400 hover:text-red-300 transition-colors duration-300">
           <Trash2 className="w-5 h-5" />
           <span>Delete Memory</span>
         </button>
-        
+
         <div className="flex items-center space-x-4">
+         
           <button
-            // onClick={() => onViewChange('memory-details', { memory })}
-            className="px-6 py-3 text-purple-300 hover:text-white transition-colors duration-300"
-          >
-            Cancel
-          </button>
-          <button
-            // onClick={handleSave}
-            className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+            onClick={EditMemory}
+            className="flex cursor-pointer items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
           >
             <Save className="w-5 h-5" />
             <span>Save Changes</span>

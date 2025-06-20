@@ -1,8 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
-import { 
-  Search, 
-  Filter, 
+import {
+  Search,
+  Filter,
   Calendar,
   User,
   Tag,
@@ -17,80 +17,65 @@ import {
   MessageCircle,
   X
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 
 const MemorySearch = ({ onViewChange }) => {
   const containerRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
+  const [vaultFilter,setVaultFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [filters, setFilters] = useState({
-    type: 'all',
-    dateRange: 'all',
-    uploader: 'all',
-    vault: 'all'
-  });
+  const [filtertype, setFiltertype] = useState('all');
   const [activeFilters, setActiveFilters] = useState([]);
+  const [memories, setMemories] = useState([]);
+  const navigate = useNavigate();
+  const [vaults, setVaults] = useState([]);
 
-  const searchResults = [
-    {
-      id: 1,
-      type: 'photo',
-      title: "Christmas Morning 2024",
-      thumbnail: "https://images.pexels.com/photos/1303098/pexels-photo-1303098.jpeg?auto=compress&cs=tinysrgb&w=400",
-      uploadedBy: "Mom",
-      date: "Dec 25, 2024",
-      likes: 12,
-      comments: 5,
-      vault: "Johnson Family Memories",
-      tags: ["Christmas", "Family", "Holiday"]
-    },
-    {
-      id: 2,
-      type: 'video',
-      title: "Kids Playing in Garden",
-      thumbnail: "https://images.pexels.com/photos/1648387/pexels-photo-1648387.jpeg?auto=compress&cs=tinysrgb&w=400",
-      uploadedBy: "Dad",
-      date: "Dec 20, 2024",
-      likes: 8,
-      comments: 3,
-      duration: "2:45",
-      vault: "Kids Growing Up",
-      tags: ["Kids", "Garden", "Playing"]
-    },
-    {
-      id: 3,
-      type: 'audio',
-      title: "Grandpa's War Stories",
-      thumbnail: null,
-      uploadedBy: "Sarah",
-      date: "Dec 18, 2024",
-      likes: 15,
-      comments: 7,
-      duration: "15:30",
-      vault: "Grandparents Stories",
-      tags: ["Stories", "History", "Grandpa"]
-    },
-    {
-      id: 4,
-      type: 'photo',
-      title: "Family Dinner Night",
-      thumbnail: "https://images.pexels.com/photos/1128318/pexels-photo-1128318.jpeg?auto=compress&cs=tinysrgb&w=400",
-      uploadedBy: "Emma",
-      date: "Dec 15, 2024",
-      likes: 9,
-      comments: 2,
-      vault: "Johnson Family Memories",
-      tags: ["Dinner", "Family", "Food"]
+  useEffect(() => {
+    const familyId = localStorage.getItem('familyId');
+    const memberId = localStorage.getItem('memberId');
+
+    const fetchAllVaults = async () => {
+      try {
+        const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/vault/getfamilyvaults/${familyId}/${memberId}`);
+        // console.log(result);
+        setVaults(result?.data?.vaults);
+      }
+      catch (err) {
+        console.log(err);
+      }
     }
-  ];
+
+    fetchAllVaults();
+  }, [])
+
+  useEffect(() => {
+
+    const fetchMemories = async () => {
+      const familyId = localStorage.getItem('familyId');
+
+      try {
+        const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/memory/allfamilymemory/${familyId}`);
+
+        setMemories(result?.data?.memory);
+
+        // console.log(result?.data?.memory)
+      }
+      catch (err) {
+        console.log(err);
+      }
+    }
+
+    fetchMemories();
+  }, [])
+
+
 
   const filterOptions = {
-    type: ['all', 'photos', 'videos', 'audio'],
-    dateRange: ['all', 'today', 'this-week', 'this-month', 'this-year'],
-    uploader: ['all', 'Mom', 'Dad', 'Sarah', 'Emma', 'Grandpa'],
-    vault: ['all', 'Johnson Family Memories', 'Grandparents Stories', 'Kids Growing Up']
+    uploadType: ['all', 'photo', 'video', 'audio'],
   };
 
   useEffect(() => {
@@ -106,9 +91,9 @@ const MemorySearch = ({ onViewChange }) => {
 
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'video':
+      case 'Video':
         return <Video className="w-4 h-4 text-white" />;
-      case 'audio':
+      case 'Audio':
         return <Mic className="w-4 h-4 text-white" />;
       default:
         return <Camera className="w-4 h-4 text-white" />;
@@ -117,9 +102,9 @@ const MemorySearch = ({ onViewChange }) => {
 
   const getTypeColor = (type) => {
     switch (type) {
-      case 'video':
+      case 'Video':
         return 'from-purple-500 to-pink-500';
-      case 'audio':
+      case 'Audio':
         return 'from-green-500 to-emerald-500';
       default:
         return 'from-blue-500 to-cyan-500';
@@ -128,7 +113,7 @@ const MemorySearch = ({ onViewChange }) => {
 
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({ ...prev, [filterType]: value }));
-    
+
     // Update active filters
     const newActiveFilters = [];
     if (value !== 'all') {
@@ -157,11 +142,26 @@ const MemorySearch = ({ onViewChange }) => {
     setSearchQuery('');
   };
 
+  const filteredMemories = memories?.filter((memory) => {
+  const matchType = filtertype === 'all' || memory.uploadType?.toLowerCase() === filtertype.toLowerCase();
+  
+  const matchVault = vaultFilter === 'all' || memory?.vaultId?.vaultName?.toLowerCase() === vaultFilter.toLowerCase();
+  
+  const matchSearch = searchQuery === '' || 
+    memory.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    memory.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    memory?.vaultId?.vaultName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    memory?.uploadBy?.memberName?.toLowerCase().includes(searchQuery.toLowerCase());
+
+  return matchType && matchVault && matchSearch;
+});
+
+
   return (
     <div ref={containerRef} className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white mb-2">Vault Memories</h1>
+        <h1 className="text-4xl font-bold text-white mb-2">Family Memories</h1>
         <p className="text-purple-200">Find specific memories across all your family vaults</p>
       </div>
 
@@ -185,58 +185,34 @@ const MemorySearch = ({ onViewChange }) => {
           <div>
             <label className="block text-white text-sm font-medium mb-2">Type</label>
             <select
-              value={filters.type}
-              onChange={(e) => handleFilterChange('type', e.target.value)}
+              value={filtertype}
+              onChange={(e) => setFiltertype(e.target.value)}
               className="w-full bg-white/10 border border-white/20 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              {filterOptions.type.map(option => (
-                <option key={option} value={option}>
+              {filterOptions.uploadType.map(option => (
+                <option className='text-purple-900' key={option} value={option}>
                   {option === 'all' ? 'All Types' : option.charAt(0).toUpperCase() + option.slice(1)}
                 </option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label className="block text-white text-sm font-medium mb-2">Date Range</label>
-            <select
-              value={filters.dateRange}
-              onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-              className="w-full bg-white/10 border border-white/20 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              {filterOptions.dateRange.map(option => (
-                <option key={option} value={option}>
-                  {option === 'all' ? 'All Time' : option.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </option>
-              ))}
-            </select>
-          </div>
 
-          <div>
-            <label className="block text-white text-sm font-medium mb-2">Uploader</label>
-            <select
-              value={filters.uploader}
-              onChange={(e) => handleFilterChange('uploader', e.target.value)}
-              className="w-full bg-white/10 border border-white/20 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              {filterOptions.uploader.map(option => (
-                <option key={option} value={option}>
-                  {option === 'all' ? 'All Uploaders' : option}
-                </option>
-              ))}
-            </select>
-          </div>
+
 
           <div>
             <label className="block text-white text-sm font-medium mb-2">Vault</label>
             <select
-              value={filters.vault}
-              onChange={(e) => handleFilterChange('vault', e.target.value)}
+              value={vaultFilter}
+              onChange={(e) => setVaultFilter(e.target.value)}
               className="w-full bg-white/10 border border-white/20 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              {filterOptions.vault.map(option => (
-                <option key={option} value={option}>
-                  {option === 'all' ? 'All Vaults' : option}
+                <option className='text-purple-900 capitalize'  value='all'>
+                  All Vaults
+                </option>
+              {vaults.map(option => (
+                <option className='text-purple-900 capitalize' key={option._id} value={option.vaultName}>
+                  {option.vaultName}
                 </option>
               ))}
             </select>
@@ -278,46 +254,26 @@ const MemorySearch = ({ onViewChange }) => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-4">
           <span className="text-purple-200 text-sm">
-            {searchResults.length} results found
+            {filteredMemories.length} results found
           </span>
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* Sort */}
-          <div className="flex items-center space-x-2">
-            <span className="text-purple-200 text-sm">Sort by:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-white/10 border border-white/20 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="date">Date</option>
-              <option value="likes">Likes</option>
-              <option value="comments">Comments</option>
-            </select>
-            <button
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              className="p-2 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
-            >
-              {sortOrder === 'asc' ? <SortAsc className="w-5 h-5" /> : <SortDesc className="w-5 h-5" />}
-            </button>
-          </div>
+
 
           {/* View Mode */}
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-colors duration-300 ${
-                viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-purple-300 hover:text-white'
-              }`}
+              className={`p-2 rounded-lg transition-colors duration-300 ${viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-purple-300 hover:text-white'
+                }`}
             >
               <Grid className="w-5 h-5" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-colors duration-300 ${
-                viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-purple-300 hover:text-white'
-              }`}
+              className={`p-2 rounded-lg transition-colors duration-300 ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-purple-300 hover:text-white'
+                }`}
             >
               <List className="w-5 h-5" />
             </button>
@@ -328,42 +284,42 @@ const MemorySearch = ({ onViewChange }) => {
       {/* Results */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {searchResults.map((memory) => (
+          {filteredMemories.map((memory) => (
             <div
-              key={memory.id}
-              onClick={() => onViewChange('memory-details', { memory })}
+              key={memory._id}
+              onClick={() => navigate(`/family/memorydetail/${memory._id}`)}
               className="group bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 hover:transform hover:scale-105 hover:-translate-y-1 cursor-pointer"
             >
               {/* Media preview */}
               <div className="relative aspect-square overflow-hidden">
-                {memory.thumbnail ? (
+                {memory.uploadType === 'Photo' ? (
                   <img
-                    src={memory.thumbnail}
+                    src={`${import.meta.env.VITE_BASE_URL}/images/${memory.media}`}
                     alt={memory.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
+                ) : memory.uploadType === 'Video' ? (
+                  <video muted autoPlay className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" >
+                    <source src={`${import.meta.env.VITE_BASE_URL}/video/${memory.media}`} type='video/mp4' />
+                  </video>
                 ) : (
-                  <div className={`w-full h-full bg-gradient-to-br ${getTypeColor(memory.type)} flex items-center justify-center`}>
-                    {getTypeIcon(memory.type)}
+                  <div className={`w-full h-full bg-gradient-to-br ${getTypeColor(memory.uploadType)} flex items-center justify-center`}>
+                    {getTypeIcon(memory.uploadType)}
                   </div>
                 )}
-                
-                {memory.type !== 'photo' && (
+
+                {memory.uploadType !== 'photo' && (
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                     <div className="w-12 h-12 bg-black/60 rounded-full flex items-center justify-center">
-                      {getTypeIcon(memory.type)}
+                      {getTypeIcon(memory.uploadType)}
                     </div>
                   </div>
                 )}
 
-                {memory.duration && (
-                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                    {memory.duration}
-                  </div>
-                )}
+
 
                 {/* Type indicator */}
-                <div className={`absolute top-2 left-2 w-6 h-6 bg-gradient-to-br ${getTypeColor(memory.type)} rounded-full flex items-center justify-center`}>
+                <div className={`absolute top-2 left-2 w-6 h-6 bg-gradient-to-br ${getTypeColor(memory.uploadType)} rounded-full flex items-center justify-center`}>
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
               </div>
@@ -374,77 +330,47 @@ const MemorySearch = ({ onViewChange }) => {
                   {memory.title}
                 </h3>
                 <p className="text-purple-200 text-sm mb-1">
-                  By {memory.uploadedBy} • {memory.date}
+                  By {memory.uploadBy?.memberName || 'Family'} • {new Date(memory.createdAt).toDateString()}
                 </p>
                 <p className="text-purple-300 text-xs mb-3">
-                  {memory.vault}
+                  {memory?.vaultId?.vaultName}
                 </p>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-purple-300 text-sm">
-                    <span className="flex items-center space-x-1 hover:text-pink-400 transition-colors duration-300">
-                      <Heart className="w-4 h-4" />
-                      <span>{memory.likes}</span>
-                    </span>
-                    <span className="flex items-center space-x-1 hover:text-blue-400 transition-colors duration-300">
-                      <MessageCircle className="w-4 h-4" />
-                      <span>{memory.comments}</span>
-                    </span>
-                  </div>
-                </div>
 
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {memory.tags.slice(0, 2).map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-purple-600/20 text-purple-300 rounded text-xs"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                  {memory.tags.length > 2 && (
-                    <span className="px-2 py-1 bg-purple-600/20 text-purple-300 rounded text-xs">
-                      +{memory.tags.length - 2}
-                    </span>
-                  )}
-                </div>
+
+
+
               </div>
             </div>
           ))}
         </div>
       ) : (
         <div className="space-y-4">
-          {searchResults.map((memory) => (
+          {filteredMemories.map((memory) => (
             <div
-              key={memory.id}
-              onClick={() => onViewChange('memory-details', { memory })}
+              key={memory._id}
+              onClick={() => navigate(`/family/memorydetail/${memory._id}`)}
               className="group bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 hover:transform hover:scale-[1.02] cursor-pointer"
             >
               <div className="flex items-center space-x-4">
                 {/* Thumbnail */}
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                  {memory.thumbnail ? (
+                  {memory.uploadType === 'Photo' ? (
                     <img
-                      src={memory.thumbnail}
+                      src={`${import.meta.env.VITE_BASE_URL}/images/${memory.media}`}
                       alt={memory.title}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className={`w-full h-full bg-gradient-to-br ${getTypeColor(memory.type)} flex items-center justify-center`}>
-                      {getTypeIcon(memory.type)}
+                    <div className={`w-full h-full bg-gradient-to-br ${getTypeColor(memory.uploadType)} flex items-center justify-center`}>
+                      {getTypeIcon(memory.uploadType)}
                     </div>
                   )}
-                  {memory.type !== 'photo' && (
+                  {memory.uploadType !== 'Photo' && (
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      {getTypeIcon(memory.type)}
+                      {getTypeIcon(memory.uploadType)}
                     </div>
                   )}
-                  {memory.duration && (
-                    <div className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1 rounded">
-                      {memory.duration}
-                    </div>
-                  )}
+
                 </div>
 
                 {/* Content */}
@@ -453,34 +379,12 @@ const MemorySearch = ({ onViewChange }) => {
                     {memory.title}
                   </h3>
                   <p className="text-purple-200 text-sm mb-1">
-                    Uploaded by {memory.uploadedBy} • {memory.date}
+                    Uploaded by {memory.uploadBy?.memberName || 'Family'} • {new Date(memory.createdAt).toDateString()}
                   </p>
                   <p className="text-purple-300 text-xs mb-2">
-                    {memory.vault}
+                    {memory?.vaultId?.vaultName}
                   </p>
-                  
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {memory.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-purple-600/20 text-purple-300 rounded text-xs"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
 
-                  <div className="flex items-center space-x-4 text-purple-300 text-sm">
-                    <span className="flex items-center space-x-1">
-                      <Heart className="w-4 h-4" />
-                      <span>{memory.likes}</span>
-                    </span>
-                    <span className="flex items-center space-x-1">
-                      <MessageCircle className="w-4 h-4" />
-                      <span>{memory.comments}</span>
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -489,7 +393,7 @@ const MemorySearch = ({ onViewChange }) => {
       )}
 
       {/* Empty state */}
-      {searchResults.length === 0 && (
+      {memories.length === 0 && (
         <div className="text-center py-16">
           <Search className="w-16 h-16 text-purple-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">No memories found</h3>

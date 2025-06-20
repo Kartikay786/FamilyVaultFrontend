@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { 
   Users, 
@@ -13,10 +13,13 @@ import {
   Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Dashboard = () => {
   const containerRef = useRef(null);
   const navigate = useNavigate();
+  const [statsdata,setStatsdata] = useState([]);
+  const loginType = localStorage.getItem('loginType');
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -29,11 +32,23 @@ const Dashboard = () => {
     return () => ctx.revert();
   }, []);
 
+  useEffect(()=>{
+    const familyId = localStorage.getItem('familyId');
+
+    const fetchStats = async () => {
+      const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/family/allstats/${familyId}`);
+      console.log(result.data);
+      setStatsdata(result.data);
+    }
+
+    fetchStats()
+  },[])
+
   const stats = [
-    { label: 'Total Memories', value: '1,247', icon: Heart, color: 'from-pink-500 to-rose-500' },
-    { label: 'Family Members', value: '12', icon: Users, color: 'from-blue-500 to-cyan-500' },
-    { label: 'Active Vaults', value: '3', icon: Upload, color: 'from-purple-500 to-pink-500' },
-    { label: 'This Month', value: '89', icon: TrendingUp, color: 'from-green-500 to-emerald-500' }
+    { label: 'Total Memories', value: statsdata?.totalMemory, icon: Heart, color: 'from-pink-500 to-rose-500' },
+    { label: 'Family Members', value: statsdata?.totalmember , icon: Users, color: 'from-blue-500 to-cyan-500' },
+    { label: 'Active Vaults', value: statsdata?.totalvault , icon: Upload, color: 'from-purple-500 to-pink-500' },
+    { label: 'This Month', value: '15', icon: TrendingUp, color: 'from-green-500 to-emerald-500' }
   ];
 
   const recentActivity = [
@@ -45,7 +60,7 @@ const Dashboard = () => {
 
   const quickActions = [
     { label: 'Upload Memory', icon: Upload, path: '/family/uploadmemory', color: 'from-purple-600 to-pink-600' },
-    { label: 'Create Vault', icon: Plus, path: '/family/createvault', color: 'from-blue-600 to-cyan-600' },
+    { label: 'Create Vault', icon: Plus, path: loginType === 'Family' ? '/family/addmember' : '/family/createvault', color: 'from-blue-600 to-cyan-600' },
     { label: 'Add Member', icon: Plus, path: '/family/addMember', color: 'from-orange-600 to-red-600' },
     { label: 'Recent Memories', icon: Heart, path: '/family/recentMemory', color: 'from-green-600 to-emerald-600' },
   ];
@@ -97,12 +112,7 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-white">Recent Activity</h2>
-            <button 
-              onClick={() => onViewChange('recent-memories')}
-              className="text-purple-300 hover:text-white transition-colors duration-300"
-            >
-              View All →
-            </button>
+           
           </div>
           <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
             {recentActivity.map((activity, index) => (
@@ -132,8 +142,8 @@ const Dashboard = () => {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">This Month's Memories</h2>
           <button 
-            onClick={() => onViewChange('memory-timeline')}
-            className="text-purple-300 hover:text-white transition-colors duration-300"
+            onClick={() => navigate('/family/memorytimeline')}
+            className="text-purple-300 hover:text-white cursor-pointer transition-colors duration-300"
           >
             View Timeline →
           </button>

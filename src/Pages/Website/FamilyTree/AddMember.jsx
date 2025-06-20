@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ArrowLeft, Upload, Palette, Users, Save, Plus } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const AddMember = ({ onViewChange }) => {
     const containerRef = useRef(null);
@@ -17,6 +18,9 @@ const AddMember = ({ onViewChange }) => {
     const [role, setRole] = useState('');
     const [profileImage, setProfileImage] = useState(null);
     const navigate = useNavigate();
+    const [previewImage, setPreviewImage] = useState(null);
+    const [loading,setLoading] = useState(false);
+
 
     useEffect(() => {
         const ctx = gsap.context(() => {
@@ -31,35 +35,48 @@ const AddMember = ({ onViewChange }) => {
 
     console.log(role);
 
-    const handleImageUpload = (e) => setProfileImage(e.target.files[0]);
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setPreviewImage(URL.createObjectURL(file));  // set preview
+            setProfileImage(file);  // this is your existing state
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if(!memberName || !Dob || !bio || !email || !phone || !role ) {
+        if (!memberName || !Dob || !bio || !email || !phone || !role) {
             alert('Please all fields');
             return
         }
 
-        try{
+        setLoading(true);
+        try {
             const formData = new FormData();
-            formData.append('familyId',familyId);
-            formData.append('memberName',memberName);
-            formData.append('bio',bio);
-            formData.append('Dob',Dob);
-            formData.append('email',email);
-            formData.append('phone',phone);
-            formData.append('relation',relation === 'Other' ? otherRelation : relation );
-            formData.append('role',role);
-            formData.append('profileImage',profileImage);
-            
-            const result = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/member/addmember`,formData);
-            alert('Member added successfully');
+            formData.append('familyId', familyId);
+            formData.append('memberName', memberName);
+            formData.append('bio', bio);
+            formData.append('Dob', Dob);
+            formData.append('email', email);
+            formData.append('phone', phone);
+            formData.append('relation', relation === 'Other' ? otherRelation : relation);
+            formData.append('role', role);
+            formData.append('profileImage', profileImage);
+
+            const result = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/member/addmember`, formData);
+            toast.success('Member Added Successfully.', {
+                position: 'top-center'
+            });
+            navigate('/family/familymember');
         }
-        catch(err){
+        catch (err) {
             console.log(err);
+            toast.error(err.response.data.message, {
+                position: 'top-center'
+            });
         }
-        finally{
+        finally {
             setMemberName('');
             setBio('');
             setDob('');
@@ -69,6 +86,8 @@ const AddMember = ({ onViewChange }) => {
             setRole('');
             setProfileImage(null);
             setOtherRelation('');
+            setPreviewImage('');
+            setLoading(false)
         }
     };
 
@@ -76,17 +95,39 @@ const AddMember = ({ onViewChange }) => {
     return (
         <div ref={containerRef} className="p-6 max-w-4xl mx-auto">
             {/* Header */}
-            <div className="flex items-center space-x-4 mb-8">
-                <button
-                    onClick={() =>  navigate('/family/dashboard')}
-                    className="p-2 cursor-pointer text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
-                >
-                    <ArrowLeft className="w-6 h-6" />
-                </button>
-                <div>
-                    <h1 className="text-4xl font-bold text-white mb-2">Add New Member</h1>
-                    <p className="text-purple-200">Set up a new family member </p>
+            <div className="flex items-center justify-between space-x-4 md:mb-8">
+                <div className="flex items-center space-x-4 mb-8">
+                    <button
+                        onClick={() => navigate('/family/dashboard')}
+                        className="p-2 cursor-pointer text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
+                    >
+                        <ArrowLeft className="w-6 h-6" />
+                    </button>
+                    <div>
+                        <h1 className="text-4xl font-bold text-white mb-2">Add New Member</h1>
+                        <p className="text-purple-200">Set up a new family member </p>
+                    </div>
+
                 </div>
+                <div className=" hidden md:flex items-center space-x-3">
+                    <button
+                        onClick={() => navigate('/family/addexistingmember')}
+                        className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Add Existing Member</span>
+                    </button>
+                </div>
+            </div>
+
+            <div className=" flex md:hidden mb-8  items-center space-x-3">
+                <button
+                    onClick={() => navigate('/family/addexistingmember')}
+                    className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Existing Member</span>
+                </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
@@ -172,6 +213,18 @@ const AddMember = ({ onViewChange }) => {
                                     <Upload className="w-5 h-5" />
                                     <span>Select Image</span>
                                 </label>
+
+                                {previewImage && (
+                                    <div className="mt-4">
+                                        <h4 className="text-white mb-2">Preview:</h4>
+                                        <img
+                                            src={previewImage}
+                                            alt="Cover Preview"
+                                            className="w-full max-h-64 object-cover rounded-lg border border-white/20"
+                                        />
+                                    </div>
+                                )}
+
                             </div>
                         </div>
                     </div>
@@ -211,6 +264,7 @@ const AddMember = ({ onViewChange }) => {
                                 <div>
                                     <label className="block text-white text-sm font-medium mb-2">Family Realtion</label>
                                     <select
+                                        value={relation}
                                         onChange={(e) => setRelation(e.target.value)}
                                         className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     >
@@ -250,11 +304,12 @@ const AddMember = ({ onViewChange }) => {
                                 <div>
                                     <label className="block text-white text-sm font-medium mb-2">Access Role</label>
                                     <select
+                                        value={role}
                                         onChange={(e) => setRole(e.target.value)}
                                         className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    > 
-                                     <option className='text-purple-900' value="">Choose Family Member Role </option>
-                                       
+                                    >
+                                        <option className='text-purple-900' value="">Choose Family Member Role </option>
+
                                         <option className='text-purple-900' value="Member">Member - Family members Limited Access </option>
                                         <option className='text-purple-900' value="Admin">Admin - Super Access</option>
                                     </select>
@@ -302,8 +357,13 @@ const AddMember = ({ onViewChange }) => {
                         type="submit"
                         className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
                     >
+                        {
+                        loading ? 'Adding...' :(
+                            <>
                         <Plus className="w-5 h-5" />
-                        <span>Add Member</span>
+                        <span> Add Member</span>
+                        </>
+                        )}
                     </button>
                 </div>
             </form>

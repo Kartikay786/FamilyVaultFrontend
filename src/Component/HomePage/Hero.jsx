@@ -11,6 +11,7 @@ const Hero = ({ onCreateVault }) => {
   const buttonsRef = useRef(null);
   const floatingElementsRef = useRef(null);
   const navigate = useNavigate();
+  const familyId = localStorage.getItem('familyId')
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -111,14 +112,14 @@ const Hero = ({ onCreateVault }) => {
         
         <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-6 justify-center items-center">
           <button
-            onClick={()=>navigate('/auth/register')}
+            onClick={()=>{familyId ? navigate('/family/dashboard') : navigate('/auth/register')}}
             className="group cursor-pointer relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-semibold rounded-xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
           >
             <span className="relative z-10">Create Your Family Account</span>
             <div className="absolute inset-0 bg-gradient-to-r from-purple-700 to-pink-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </button>
           
-          <button  onClick={()=>navigate('/auth/login')}
+          <button  onClick={()=>{familyId ? navigate('/family/vaultoverview') : navigate('/auth/login')}}
             className="px-8 py-4 cursor-pointer bg-white/10 backdrop-blur-sm text-white text-lg font-semibold rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
             Join Existing Vault
           </button>
