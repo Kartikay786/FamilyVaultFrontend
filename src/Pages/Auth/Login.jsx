@@ -50,7 +50,7 @@ const LoginScreen = ({ onLogin }) => {
 
         setTimeout(() => {
         navigate('/family/dashboard');
-      }, 1000);
+      }, 200);
     }
     catch (err) {
       console.log(err);
@@ -61,7 +61,6 @@ const LoginScreen = ({ onLogin }) => {
 
     }
     finally {
-      clearTimeout(timer);
       setLoading(false)
       setEmail('');
       setFamilyName('');

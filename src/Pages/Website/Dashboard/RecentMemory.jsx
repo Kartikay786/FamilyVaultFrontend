@@ -11,6 +11,7 @@ const RecentMemories = ({ onViewChange }) => {
   const [viewMode, setViewMode] = useState('grid');
   const [filterType, setFilterType] = useState('all');
   const [memories, setMemories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +27,9 @@ const RecentMemories = ({ onViewChange }) => {
       }
       catch (err) {
         console.log(err);
+      }
+       finally {
+        setLoading(false); // Hide loader after data is fetched
       }
     }
 
@@ -78,6 +82,15 @@ const RecentMemories = ({ onViewChange }) => {
   return (
     <div ref={containerRef} className="p-6 max-w-7xl mx-auto">
       {/* Header */}
+
+      {/* Loader */}
+      {loading ? (
+        <div className="flex justify-center items-center h-[60vh]">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500 border-solid"></div>
+        </div>
+      ) : (
+        <>
+        
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">Recent Memories</h1>
         <p className="text-purple-200">Latest memories shared by your family</p>
@@ -228,6 +241,9 @@ const RecentMemories = ({ onViewChange }) => {
             </div>
           ))}
         </div>
+      )}
+
+      </>
       )}
     </div>
   );

@@ -28,6 +28,7 @@ const Settings = ({ onViewChange }) => {
   const [previewImage, setPreviewImage] = useState(null);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const [settings, setSettings] = useState({
@@ -53,6 +54,10 @@ const Settings = ({ onViewChange }) => {
       setDescription(result?.data?.family?.description)
     }
     fetchProfile()
+
+  
+        setLoading(false); // Hide loader after data is fetched
+      
   }, [])
 
   const handleImageUpload = (e) => {
@@ -429,6 +434,14 @@ const Settings = ({ onViewChange }) => {
 
   return (
     <div ref={containerRef} className="p-6 max-w-6xl mx-auto">
+      {/* Loader */}
+      {loading ? (
+        <div className="flex justify-center items-center h-[60vh]">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500 border-solid"></div>
+        </div>
+      ) : (
+        <>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -477,6 +490,9 @@ const Settings = ({ onViewChange }) => {
           {renderTabContent()}
         </div>
       </div>
+
+      </>
+      )}
     </div>
   );
 };

@@ -33,6 +33,7 @@ const MemorySearch = ({ onViewChange }) => {
   const [memories, setMemories] = useState([]);
   const navigate = useNavigate();
   const [vaults, setVaults] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const familyId = localStorage.getItem('familyId');
@@ -66,6 +67,9 @@ const MemorySearch = ({ onViewChange }) => {
       }
       catch (err) {
         console.log(err);
+      }
+      finally {
+        setLoading(false); // Hide loader after data is fetched
       }
     }
 
@@ -159,6 +163,13 @@ const MemorySearch = ({ onViewChange }) => {
 
   return (
     <div ref={containerRef} className="p-6 max-w-7xl mx-auto">
+     {/* Loader */}
+      {loading ? (
+        <div className="flex justify-center items-center h-[60vh]">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500 border-solid"></div>
+        </div>
+      ) : (
+        <> 
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">Family Memories</h1>
@@ -401,6 +412,9 @@ const MemorySearch = ({ onViewChange }) => {
             Try adjusting your search query or filters
           </p>
         </div>
+      )}
+
+        </>
       )}
     </div>
   );

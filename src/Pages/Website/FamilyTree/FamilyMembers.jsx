@@ -25,10 +25,10 @@ const FamilyMember = ({ member, onViewChange }) => {
     const navigate = useNavigate();
     const containerRef = useRef(null);
     const dispatch = useDispatch();
-    const { family, loading } = useSelector((state) => state.familyProfile);
     const [activeTab, setActiveTab] = useState('overview');
-    const [familyData,setFamilyData] = useState({});
-      const [statsdata,setStatsdata] = useState([]);
+    const [familyData, setFamilyData] = useState({});
+    const [statsdata, setStatsdata] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const familyId = localStorage.getItem('familyId');
@@ -38,9 +38,12 @@ const FamilyMember = ({ member, onViewChange }) => {
             setFamilyData(result?.data?.family)
         }
         fetchProfile()
+ setLoading(false);
     }, [])
+    
 
     console.log(familyData.member)
+
     const memberData = member || {
         id: 1,
         name: "David Johnson",
@@ -108,17 +111,17 @@ const FamilyMember = ({ member, onViewChange }) => {
         ]
     };
 
-    useEffect(()=>{
-    const familyId = localStorage.getItem('familyId');
+    useEffect(() => {
+        const familyId = localStorage.getItem('familyId');
 
-    const fetchStats = async () => {
-      const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/family/allstats/${familyId}`);
-      console.log(result.data);
-      setStatsdata(result.data);
-    }
+        const fetchStats = async () => {
+            const result = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/family/allstats/${familyId}`);
+            console.log(result.data);
+            setStatsdata(result.data);
+        }
 
-    fetchStats()
-  },[])
+        fetchStats()
+    }, [])
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: Users },
@@ -238,7 +241,7 @@ const FamilyMember = ({ member, onViewChange }) => {
         </div>
     );
 
-     const renderConnections = () => (
+    const renderConnections = () => (
         <div className="space-y-6">
             <div>
                 <h3 className="text-lg font-semibold text-white mb-4">Family Connections</h3>
@@ -252,8 +255,8 @@ const FamilyMember = ({ member, onViewChange }) => {
                             <div className="w-20 h-20 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
                                 {
                                     member.member?.profileImage ? (
-                                        <img className='h-auto w-20 bg-cover bg-center scale-150' src={`${import.meta.env.VITE_BASE_URL}/images/${member.member.profileImage}`}/>
-                                    ): ''
+                                        <img className='h-auto w-20 bg-cover bg-center scale-150' src={`${import.meta.env.VITE_BASE_URL}/images/${member.member.profileImage}`} />
+                                    ) : ''
                                 }
                             </div>
                             <div className="flex-1">
@@ -298,7 +301,7 @@ const FamilyMember = ({ member, onViewChange }) => {
 
     const renderMemories = () => (
         <div className="space-y-6">
-                <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white">Favorite Memories</h3>
                 <button className="text-purple-300 hover:text-white text-sm transition-colors duration-300">
                     View All →
@@ -371,7 +374,7 @@ const FamilyMember = ({ member, onViewChange }) => {
         </div>
     );
 
-   
+
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -388,98 +391,107 @@ const FamilyMember = ({ member, onViewChange }) => {
 
     return (
         <div ref={containerRef} className="p-6 max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center space-x-4 mb-8">
-                <button
-                    onClick={() => navigate('/family/dashboard')}
-                    className="p-2 text-purple-300 cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
-                >
-                    <ArrowLeft className="w-6 h-6" />
-                </button>
-                <div className="flex-1">
-                    <div className="flex items-center space-x-4">
-                        <div className="w-20 h-20 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                            {
-                                familyData.profileImage ? (
-                                    <img className='h-auto w-20 bg-center bg-cover' src={`${import.meta.env.VITE_BASE_URL}/images/${familyData.profileImage}`}/>
-                                ) : ''
-                            }
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-white mb-1">{familyData.familyName}</h1>
-                            <div className="flex items-center space-x-3 text-purple-200">
-                              
-                                <span className={`w-2 h-2 rounded-full ${memberData.status === 'active' ? 'bg-green-400' : 'bg-gray-400'
-                                    }`}></span>
-                                <span>Last active {memberData.lastActive}</span>
+            {/* Loader */}
+            {loading ? (
+                <div className="flex justify-center items-center h-[60vh]">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500 border-solid"></div>
+                </div>
+            ) : (
+                <>
+                    <div className="flex items-center space-x-4 mb-8">
+                        <button
+                            onClick={() => navigate('/family/dashboard')}
+                            className="p-2 text-purple-300 cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </button>
+                        <div className="flex-1">
+                            <div className="flex items-center space-x-4">
+                                <div className="w-20 h-20 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                                    {
+                                        familyData.profileImage ? (
+                                            <img className='h-auto w-20 bg-center bg-cover' src={`${import.meta.env.VITE_BASE_URL}/images/${familyData.profileImage}`} />
+                                        ) : ''
+                                    }
+                                </div>
+                                <div>
+                                    <h1 className="text-3xl font-bold text-white mb-1">{familyData.familyName}</h1>
+                                    <div className="flex items-center space-x-3 text-purple-200">
+
+                                        <span className={`w-2 h-2 rounded-full ${memberData.status === 'active' ? 'bg-green-400' : 'bg-gray-400'
+                                            }`}></span>
+                                        <span>Last active {memberData.lastActive}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        <div className="hidden md:flex items-center space-x-3">
+                            <button
+                                onClick={() => navigate('/family/addMember')}
+                                className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span>Add Member</span>
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/family/setting')}
+                                className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                            >
+                                <Edit className="w-4 h-4" />
+                                <span>Edit Profile</span>
+                            </button>
+                            {/* <button className="p-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
+                        <MoreHorizontal className="w-5 h-5" />
+                    </button> */}
+                        </div>
                     </div>
-                </div>
-                <div className="hidden md:flex items-center space-x-3">
-                     <button
-                        onClick={() => navigate('/family/addMember')}
-                        className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Member</span>
-                    </button>
 
-                    <button
-                        onClick={() => navigate('/family/setting')}
-                        className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-                    >
-                        <Edit className="w-4 h-4" />
-                        <span>Edit Profile</span>
-                    </button>
-                    {/* <button className="p-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
+                    <div className="flex md:hidden mb-4 flex-wrap gap-2  items-center space-x-3">
+                        <button
+                            onClick={() => navigate('/family/addMember')}
+                            className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Add Member</span>
+                        </button>
+
+                        <button
+                            onClick={() => navigate('/family/setting')}
+                            className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                        >
+                            <Edit className="w-4 h-4" />
+                            <span>Edit</span>
+                        </button>
+                        {/* <button className="p-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
                         <MoreHorizontal className="w-5 h-5" />
                     </button> */}
-                </div>
-            </div>
+                    </div>
 
-            <div className="flex md:hidden mb-4 flex-wrap gap-2  items-center space-x-3">
-                     <button
-                        onClick={() => navigate('/family/addMember')}
-                        className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Member</span>
-                    </button>
+                    {/* Tabs */}
+                    <div className="flex space-x-1 mb-8 bg-white/5 backdrop-blur-sm rounded-xl p-1 border border-white/10">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 flex-1 justify-center ${activeTab === tab.id
+                                    ? 'bg-purple-600 text-white'
+                                    : 'text-purple-200 hover:text-white hover:bg-white/10'
+                                    }`}
+                            >
+                                <tab.icon className="w-5 h-5" />
+                                <span>{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
 
-                    <button
-                        onClick={() => navigate('/family/setting')}
-                        className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-                    >
-                        <Edit className="w-4 h-4" />
-                        <span>Edit</span>
-                    </button>
-                    {/* <button className="p-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
-                        <MoreHorizontal className="w-5 h-5" />
-                    </button> */}
-                </div>
+                    {/* Tab Content */}
+                    <div>
+                        {renderTabContent()}
+                    </div>
 
-            {/* Tabs */}
-            <div className="flex space-x-1 mb-8 bg-white/5 backdrop-blur-sm rounded-xl p-1 border border-white/10">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 flex-1 justify-center ${activeTab === tab.id
-                            ? 'bg-purple-600 text-white'
-                            : 'text-purple-200 hover:text-white hover:bg-white/10'
-                            }`}
-                    >
-                        <tab.icon className="w-5 h-5" />
-                        <span>{tab.label}</span>
-                    </button>
-                ))}
-            </div>
-
-            {/* Tab Content */}
-            <div>
-                {renderTabContent()}
-            </div>
+                </>
+            )}
         </div>
     );
 };

@@ -24,6 +24,7 @@ const MemoryTimeline = ({ vault, onViewChange }) => {
   const [selectedMonth, setSelectedMonth] = useState(12);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery,setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const years = [2025, 2024, 2023, 2022, 2021, 2020];
   const months = [
@@ -48,6 +49,9 @@ const MemoryTimeline = ({ vault, onViewChange }) => {
       }
       catch (err) {
         console.log(err);
+      }
+      finally {
+        setLoading(false); // Hide loader after data is fetched
       }
     }
 
@@ -131,6 +135,13 @@ const MemoryTimeline = ({ vault, onViewChange }) => {
   return (
     <div ref={containerRef} className="p-6 max-w-6xl mx-auto">
       {/* Header */}
+       {/* Loader */}
+      {loading ? (
+        <div className="flex justify-center items-center h-[60vh]">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500 border-solid"></div>
+        </div>
+      ) : (
+        <>
       <div className="flex items-center space-x-4 mb-8">
         <button
           onClick={() => navigate('/family/dashboard')}
@@ -271,6 +282,8 @@ const MemoryTimeline = ({ vault, onViewChange }) => {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 

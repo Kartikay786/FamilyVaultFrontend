@@ -10,6 +10,7 @@ const VaultOverview = ({ onViewChange }) => {
   const navigate = useNavigate();
   const [vaults, setVaults] = useState([]);
   const loginType = localStorage.getItem('loginType');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const familyId = localStorage.getItem('familyId');
@@ -23,6 +24,9 @@ const VaultOverview = ({ onViewChange }) => {
       }
       catch (err) {
         console.log(err);
+      }
+      finally {
+        setLoading(false); // Hide loader after data is fetched
       }
     }
 
@@ -47,6 +51,14 @@ const VaultOverview = ({ onViewChange }) => {
   return (
     <div ref={containerRef} className="p-6 max-w-7xl mx-auto">
       {/* Header */}
+
+        {/* Loader */}
+      {loading ? (
+        <div className="flex justify-center items-center h-[60vh]">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500 border-solid"></div>
+        </div>
+      ) : (
+        <>
       <div className="flex flex-col gap-4 items-start md:flex-row md:items-center  justify-between mb-8">
        
         {
@@ -206,6 +218,8 @@ const VaultOverview = ({ onViewChange }) => {
           </div> */}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };
